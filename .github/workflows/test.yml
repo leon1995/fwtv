@@ -24,9 +24,6 @@ jobs:
         python-version: [ "3.7", "3.8", "3.9", "3.10", "3.11" ]
 
     steps:
-      - uses: szenius/set-timezone@v1.1
-        with:
-          timezoneLinux: "Europe/Berlin"
       - name: Check out Git repository
         uses: actions/checkout@v3
 

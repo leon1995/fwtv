@@ -35,12 +35,14 @@ jobs:
       - name: Install Python dependencies
         run: pip install ".[lint]"
 
-      - name: Run linters
-        uses: wearerequired/lint-action@v1
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          # Enable linters
-          isort: true
-          black: true
-          flake8: true
-          mypy: true
+      - name: Run Black
+        run: black --check fwtv tests
+
+      - name: Run isort
+        run: isort . -c
+
+      - name: Run flake8
+        run: flake8 fwtv tests
+
+      - name: Run mypy
+        run: mypy fwtv tests
