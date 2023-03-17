@@ -25,13 +25,13 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Install Python dependencies
-        run: pip install ".[lint]"
+        run: pip install ".[dev]"
 
       - name: Run Black
         run: black --check fwtv tests
 
       - name: Run isort
-        run: isort . -c
+        run: isort fwtv tests -c
 
       - name: Run flake8
         run: flake8 fwtv tests
