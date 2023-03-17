@@ -6,7 +6,6 @@ import aiohttp
 from tabulate import tabulate
 
 
-
 LIST_JSON_RESPONSE = typing.List[typing.Dict[str, typing.Any]]
 GET_ERRORS = typing.Tuple[typing.Dict[str, typing.List[str]], typing.Dict[str, typing.List[verifier.Error]]]
 
@@ -61,7 +60,7 @@ def convert_timestamp(timestamp: str) -> datetime.datetime:
 
 
 def get_errors(
-        start: datetime.datetime, end: datetime.datetime, attendances: LIST_JSON_RESPONSE, employees: LIST_JSON_RESPONSE
+    start: datetime.datetime, end: datetime.datetime, attendances: LIST_JSON_RESPONSE, employees: LIST_JSON_RESPONSE
 ) -> GET_ERRORS:
     preconditions: typing.Dict[str, typing.List[str]] = collections.defaultdict(list)
     errors: typing.Dict[str, typing.List[verifier.Error]] = collections.defaultdict(list)
