@@ -67,3 +67,4 @@ line-length = 120
 force_single_line = 1
 known_localfolder = "fwtv"
 force_alphabetical_sort_within_sections = 1
+profile = "black"
