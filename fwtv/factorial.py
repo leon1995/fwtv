@@ -1,11 +1,11 @@
 import collections
 import datetime
 import typing
-
+from fwtv import verifier
 import aiohttp
 from tabulate import tabulate
 
-from fwtv import verifier
+
 
 LIST_JSON_RESPONSE = typing.List[typing.Dict[str, typing.Any]]
 GET_ERRORS = typing.Tuple[typing.Dict[str, typing.List[str]], typing.Dict[str, typing.List[verifier.Error]]]
