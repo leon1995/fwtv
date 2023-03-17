@@ -7,7 +7,8 @@ on:
       - "v*"
   push:
     tags:
-      - v*
+      - "[0-9]+.[0-9]+.[0-9]+"
+      - "[0-9]+.[0-9]+.[0-9]+[a|b][0-9]+"
 
 jobs:
   linters:
@@ -101,4 +102,4 @@ jobs:
         with:
           files: |
             dist/*.whl
-          prerelease: ${{ github.event.ref }} =~ ^refs/tags/[0-9]+\.[0-9]+\.[0-9]+[a|b]\d+$
+          prerelease: ${{ github.event.ref }} =~ ^refs/tags/[0-9]+\.[0-9]+\.[0-9]+[a|b][0-9]+$

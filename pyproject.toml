@@ -1,10 +1,10 @@
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+requires = ["flit_core >=3.2"]
+build-backend = "flit_core.buildapi"
 
 [project]
 name = "fwtv"
-version = "1.0.0"
+dynamic = ["version"]
 authors = [
     { name = "Leon Budnick", email = "y6q6ea9w@mail-proxy.org" },
 ]
