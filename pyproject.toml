@@ -1,0 +1,69 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "fwtv"
+version = "1.0.0"
+authors = [
+    { name = "Leon Budnick", email = "y6q6ea9w@mail-proxy.org" },
+]
+description = "Verification that attendances comply with german rules. Also provide an integration to the api of FactorialHR"
+readme = "README.md"
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: GNU Affero General Public License v3",
+    "Operating System :: OS Independent",
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Intended Audience :: End Users/Desktop",
+    "Topic :: Office/Business",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+]
+keywords = [
+    "FactorialHR",
+    "HR",
+    "Working time"
+]
+dependencies = [
+    "aiohttp",
+    "tabulate"
+]
+
+[project.scripts]
+factorial-wtv = "fwtv.factorial:cli"
+[project.urls]
+"Homepage" = "https://github.com/leon1995/fwtv"
+"Bug Tracker" = "https://github.com/leon1995/fwtv/issues"
+[project.optional-dependencies]
+test = [
+    "pytest",
+    "pytest-cov",
+    "pytest-asyncio"
+]
+lint = [
+    'black',
+    'flake8',
+    'mypy',
+    'types-tabulate',
+    'isort'
+]
+dev = ["fwtv[test,lint]"]
+
+[tool.pytest.ini_options]
+testpaths = "tests/"
+addopts = "--cov=fwtv --cov-report term-missing --cov-fail-under=95"
+
+[tool.black]
+line-length = 120
+
+[isort]
+force_single_line = 1
+known_localfolder = "fwtv"
+force_alphabetical_sort_within_sections = 1

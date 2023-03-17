@@ -1,0 +1,48 @@
+name: Lint code
+
+on:
+  push:
+    branches:
+      - main
+      - "v*"
+      - "test-me-*"
+    tags:
+      - "v*"
+
+  pull_request:
+    branches:
+      - main
+      - "v*"
+
+jobs:
+  run-tests:
+    name: Run linters
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version: [ "3.7", "3.8", "3.9", "3.10", "3.11" ]
+
+    steps:
+      - uses: szenius/set-timezone@v1.1
+        with:
+          timezoneLinux: "Europe/Berlin"
+      - name: Check out Git repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v1
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install Python dependencies
+        run: pip install ".[test]"
+
+      - name: Run pytest
+        uses: pavelzw/pytest-action@v2
+        with:
+          verbose: true
+          emoji: true
+          job-summary: true
+          click-to-expand: true
+          report-title: 'Test Report'
