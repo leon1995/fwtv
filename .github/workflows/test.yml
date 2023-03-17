@@ -1,14 +1,6 @@
 name: Lint code
 
 on:
-  push:
-    branches:
-      - main
-      - "v*"
-      - "test-me-*"
-    tags:
-      - "v*"
-
   pull_request:
     branches:
       - main
