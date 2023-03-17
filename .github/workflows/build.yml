@@ -77,6 +77,9 @@ jobs:
       - name: Check out Git repository
         uses: actions/checkout@v3
 
+      - name: Install build
+        run: pip install build
+
       - name: Build package
         run: python -m build
 
