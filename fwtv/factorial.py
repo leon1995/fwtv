@@ -105,9 +105,9 @@ def main(start: datetime.datetime, end: datetime.datetime, api_key: str):  # pra
 
     preconditions, errors = get_errors(start, end, attendances, employees)
     entries = []
-    for name, error in preconditions.items():
-        for e in error:
-            entries.append([name, e])
+    for name, precondition_errors in preconditions.items():
+        for precondition_error in precondition_errors:
+            entries.append([name, precondition_error])
     print("Precondition errors")
     print(tabulate(entries, headers=["Name", "Error"], tablefmt="orgtbl"))
     print("")
