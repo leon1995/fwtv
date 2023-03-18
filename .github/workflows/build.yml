@@ -76,9 +76,12 @@ jobs:
     steps:
       - name: Check out Git repository
         uses: actions/checkout@v3
+
       - name: Get tag name
-        id: get_tag_name
-        run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+        run: echo ${GITHUB_REF/refs\/tags\//}
+
+      - name: Get tag name 2
+        run: echo ${{ github.ref_name }}
 
       - name: Detect release version
         if: ${{ github.ref_name }} =~ ^[0-9]+\.[0-9]+\.[0-9]+[a|b][0-9]+$
