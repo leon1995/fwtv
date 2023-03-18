@@ -56,7 +56,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Set up Python
-        uses: actions/setup-python@v1
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -76,11 +76,14 @@ jobs:
     steps:
       - name: Check out Git repository
         uses: actions/checkout@v3
+      - name: Get tag name
+        id: get_tag_name
+        run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
 
       - name: Detect release version
-        if: startsWith(github.ref, 'refs/tags/')
+        if: ${GITHUB_REF/refs\/tags\//} =~ ^[0-9]+\.[0-9]+\.[0-9]+[a|b][0-9]+$
         run: |
-          echo FWTV_VERSION=${GITHUB_REF##*/} >> $GITHUB_ENV
+          echo FWTV_VERSION=${GITHUB_REF/refs\/tags\//} >> $GITHUB_ENV
 
       - name: Install build
         run: pip install build
@@ -90,7 +93,7 @@ jobs:
 
       - name: Publish package to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: ${GITHUB_REF/refs\/tags\//} =~ ^[0-9]+\.[0-9]+\.[0-9]+[a|b][0-9]+$
         with:
           password: ${{ secrets.PYPI_API_TOKEN }}
           repository-url: https://test.pypi.org/legacy/
@@ -101,4 +104,4 @@ jobs:
         with:
           files: |
             dist/*.whl
-          prerelease: ${{ github.event.ref }} =~ ^refs/tags/[0-9]+\.[0-9]+\.[0-9]+[a|b][0-9]+$
+          prerelease: ${GITHUB_REF/refs\/tags\//} =~ ^[0-9]+\.[0-9]+\.[0-9]+[a|b][0-9]+$
