@@ -1,3 +1,4 @@
+import asyncio
 import collections
 import datetime
 import typing
@@ -61,7 +62,7 @@ def convert_timestamp(timestamp: str) -> datetime.datetime:
 
 
 def get_errors(
-    start: datetime.datetime, end: datetime.datetime, attendances: LIST_JSON_RESPONSE, employees: LIST_JSON_RESPONSE
+        start: datetime.datetime, end: datetime.datetime, attendances: LIST_JSON_RESPONSE, employees: LIST_JSON_RESPONSE
 ) -> GET_ERRORS:
     preconditions: typing.Dict[str, typing.List[str]] = collections.defaultdict(list)
     errors: typing.Dict[str, typing.List[verifier.Error]] = collections.defaultdict(list)
@@ -93,27 +94,16 @@ def get_errors(
     return preconditions, errors
 
 
-def cli():  # pragma: no cover
-    import argparse
-    import asyncio
-
-    parser = argparse.ArgumentParser(
-        "Fetch attendances and employees from FactorialHR api and verify that the " "work time comply with german rules"
-    )
-    parser.add_argument("start", type=datetime.datetime.fromisoformat, help="Start iso 8601 formatted timestamp")
-    parser.add_argument("end", type=datetime.datetime.fromisoformat, help="End iso 8601 formatted timestamp")
-    parser.add_argument("api_key", type=str, help="Company api key")
-    args = parser.parse_args()
-
+def main(start: datetime.datetime, end: datetime.datetime, api_key: str):  # pragma: no cover
     async def fetch_data() -> typing.Tuple[LIST_JSON_RESPONSE, LIST_JSON_RESPONSE]:
-        async with FactorialApi(args.api_key) as api:
+        async with FactorialApi(api_key) as api:
             _attendances = await api.get_attendances()
             _employees = await api.get_employees()
         return _employees, _attendances
 
     employees, attendances = asyncio.run(fetch_data())
 
-    preconditions, errors = get_errors(args.start, args.end, attendances, employees)
+    preconditions, errors = get_errors(start, end, attendances, employees)
     entries = []
     for name, error in preconditions.items():
         for e in error:
@@ -133,3 +123,16 @@ def cli():  # pragma: no cover
                 entries.append(["", "", "", "", ""])
     print("Working time verification failures")
     print(tabulate(entries[:-1], headers=headers, tablefmt="orgtbl"))
+
+
+def cli():  # pragma: no cover
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        "Fetch attendances and employees from FactorialHR api and verify that the " "work time comply with german rules"
+    )
+    parser.add_argument("start", type=datetime.datetime.fromisoformat, help="Start iso 8601 formatted timestamp")
+    parser.add_argument("end", type=datetime.datetime.fromisoformat, help="End iso 8601 formatted timestamp")
+    parser.add_argument("api_key", type=str, help="Company api key")
+    args = parser.parse_args()
+    main(args.start, args.end, args.api_key)
