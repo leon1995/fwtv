@@ -4,10 +4,10 @@ on:
   pull_request:
     branches:
       - main
-      - "[0-9]+.[0-9]+.[0-9]+"
+      - "v[0-9]+.[0-9]+.x"
   push:
     tags:
-      - "[0-9]+.[0-9]+.[0-9]*"
+      - "v[0-9]+.[0-9]+.[0-9]*"
 
 jobs:
   linters:
@@ -77,14 +77,8 @@ jobs:
       - name: Check out Git repository
         uses: actions/checkout@v3
 
-      - name: Get tag name
-        run: echo ${GITHUB_REF/refs\/tags\//}
-
-      - name: Get tag name 2
-        run: echo ${{ github.ref_name }}
-
       - name: Detect release version
-        if: ${{ github.ref_name }} =~ ^[0-9]+\.[0-9]+\.[0-9]+[a|b][0-9]+$
+        if: ${{ github.ref_name }} =~ ^v[0-9]+\.[0-9]+\.[0-9]+[a|b]?\d*$
         run: |
           echo FWTV_VERSION=${GITHUB_REF/refs\/tags\//} >> $GITHUB_ENV
 
@@ -96,15 +90,15 @@ jobs:
 
       - name: Publish package to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
-        if: ${{ github.ref_name }} =~ ^[0-9]+\.[0-9]+\.[0-9]+[a|b][0-9]+$
+        if: ${{ github.ref_name }} =~ ^v[0-9]+\.[0-9]+\.[0-9]+[a|b]?\d*$
         with:
           password: ${{ secrets.PYPI_API_TOKEN }}
           repository-url: https://test.pypi.org/legacy/
 
       - name: Attach artifacts to github release
         uses: softprops/action-gh-release@v1
-        if: ${{ github.ref_name }} =~ ^[0-9]+\.[0-9]+\.[0-9]+[a|b][0-9]+$
+        if: ${{ github.ref_name }} =~ ^v[0-9]+\.[0-9]+\.[0-9]+[a|b]?\d*$
         with:
           files: |
             dist/*.whl
-          prerelease: ${{ github.ref_name }} =~ ^[0-9]+\.[0-9]+\.[0-9]+[a|b][0-9]+$
+          prerelease: ${{ github.ref_name }} =~ ^v[0-9]+\.[0-9]+\.[0-9]+[a|b]\d+$
