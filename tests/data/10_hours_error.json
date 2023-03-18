@@ -1,0 +1,56 @@
+[
+    {
+        "employee_id": 1,
+        "clock_in": "2023-03-11T12:30:00.000Z",
+        "clock_out": "2023-03-11T22:30:00.001Z",
+        "workable": true
+    },
+    {
+        "employee_id": 1,
+        "clock_in": "2023-03-12T10:00:00.000Z",
+        "clock_out": "2023-03-12T15:00:00.000Z",
+        "workable": true
+    },
+    {
+        "employee_id": 1,
+        "clock_in": "2023-03-12T15:00:00.000Z",
+        "clock_out": "2023-03-12T20:00:00.001Z",
+        "workable": true
+    },
+    {
+        "employee_id": 2,
+        "clock_in": "2023-03-11T12:30:00.000Z",
+        "clock_out": "2023-03-11T22:30:00.001Z",
+        "workable": true
+    },
+    {
+        "employee_id": 2,
+        "clock_in": "2023-03-12T10:00:00.000Z",
+        "clock_out": "2023-03-12T15:00:00.000Z",
+        "workable": true
+    },
+    {
+        "employee_id": 2,
+        "clock_in": "2023-03-12T15:00:00.000Z",
+        "clock_out": "2023-03-12T20:00:00.001Z",
+        "workable": true
+    },
+    {
+        "employee_id": 3,
+        "clock_in": "2023-03-11T12:30:00.000Z",
+        "clock_out": "2023-03-11T22:30:00.001Z",
+        "workable": true
+    },
+    {
+        "employee_id": 3,
+        "clock_in": "2023-03-12T10:00:00.000Z",
+        "clock_out": "2023-03-12T15:00:00.000Z",
+        "workable": true
+    },
+    {
+        "employee_id": 3,
+        "clock_in": "2023-03-12T15:00:00.000Z",
+        "clock_out": "2023-03-12T20:00:00.001Z",
+        "workable": true
+    }
+]
