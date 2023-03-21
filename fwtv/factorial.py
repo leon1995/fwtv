@@ -63,7 +63,7 @@ def convert_timestamp(timestamp: str) -> datetime.datetime:
 
 
 def get_errors(
-        start: datetime.datetime, end: datetime.datetime, attendances: LIST_JSON_RESPONSE, employees: LIST_JSON_RESPONSE
+    start: datetime.datetime, end: datetime.datetime, attendances: LIST_JSON_RESPONSE, employees: LIST_JSON_RESPONSE
 ) -> GET_ERRORS:
     preconditions: typing.Dict[str, typing.List[str]] = collections.defaultdict(list)
     employee_errors: typing.Dict[str, typing.List[verifier.Error]] = collections.defaultdict(list)
@@ -89,13 +89,18 @@ def get_errors(
             except ValueError as e:
                 preconditions[name].append(str(e))
                 continue
-        errors = verifier.verify_attendances(employee_attendances)
-        errors = [error for error in errors
-                  if (error.reason == 'Attended more than 6 hours without a cumulated break of 30 min'
-                      and verifier.calculate_time_attended(error.attendances) >= datetime.timedelta(hours=6, minutes=1))
-                  or (error.reason == 'Attended more than 9 hours without a cumulated break of 45 min'
-                      and verifier.calculate_time_attended(error.attendances) >= datetime.timedelta(hours=9, minutes=1))
-                  ]
+        errors = []
+        for error in verifier.verify_attendances(employee_attendances):
+            # count error if for 6 or 9 hours working time has been + 1 min, because of inaccurate
+            # automated clock in/out feature of FactorialHR
+            if error.reason == "Attended more than 6 hours without a cumulated break of 30 min":
+                if verifier.calculate_time_attended(error.attendances) >= datetime.timedelta(hours=6, minutes=1):
+                    errors.append(error)
+            elif error.reason == "Attended more than 9 hours without a cumulated break of 45 min":
+                if verifier.calculate_time_attended(error.attendances) >= datetime.timedelta(hours=9, minutes=1):
+                    errors.append(error)
+            else:
+                errors.append(error)
         if errors:
             employee_errors[name] = errors
     return preconditions, employee_errors
@@ -150,5 +155,5 @@ def cli():  # pragma: no cover
     main(args.start, args.end, args.api_key)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     cli()

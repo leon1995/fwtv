@@ -2,7 +2,7 @@
     {
         "employee_id": 1,
         "clock_in": "2023-03-11T12:30:00.000Z",
-        "clock_out": "2023-03-11T18:30:00.001Z",
+        "clock_out": "2023-03-11T18:31:00.000Z",
         "workable": true
     },
     {
@@ -14,7 +14,7 @@
     {
         "employee_id": 2,
         "clock_in": "2023-03-11T12:30:00.000Z",
-        "clock_out": "2023-03-11T18:30:00.001Z",
+        "clock_out": "2023-03-11T18:31:00.000Z",
         "workable": true
     },
     {
@@ -26,7 +26,7 @@
     {
         "employee_id": 3,
         "clock_in": "2023-03-11T12:30:00.000Z",
-        "clock_out": "2023-03-11T18:30:00.001Z",
+        "clock_out": "2023-03-11T18:31:00.000Z",
         "workable": true
     },
     {
