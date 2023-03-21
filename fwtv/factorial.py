@@ -2,7 +2,7 @@ import asyncio
 import collections
 import datetime
 import typing
-from importlib import metadata
+from importlib.metadata import version
 
 import aiohttp
 from tabulate import tabulate
@@ -109,7 +109,7 @@ def get_errors(
 def main(start: datetime.datetime, end: datetime.datetime, api_key: str):  # pragma: no cover
     print("FactorialHR working time verification")
     print("Source code available at https://github.com/leon1995/fwtv")
-    print(f'Version: {metadata.version("fwtv")}')
+    print(f'Version: {version("fwtv")}')
     print("")
 
     async def fetch_data() -> typing.Tuple[LIST_JSON_RESPONSE, LIST_JSON_RESPONSE]:
