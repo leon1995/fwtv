@@ -6,60 +6,12 @@ on:
 
 jobs:
   linters:
-    name: Run linters
-    runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        python-version: [ "3.7", "3.8", "3.9", "3.10", "3.11" ]
-
-    steps:
-      - name: Check out Git repository
-        uses: actions/checkout@v3
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Install Python dependencies
-        run: pip install ".[dev]"
-
-      - name: Run Black
-        run: black --check fwtv tests
-
-      - name: Run isort
-        run: isort fwtv tests -c
-
-      - name: Run flake8
-        run: flake8 fwtv tests
-
-      - name: Run mypy
-        run: mypy fwtv tests
+    uses: ./.github/workflows/lint.yml
 
   tests:
-    name: Run tests
-    runs-on: ubuntu-latest
+    uses: ./.github/workflows/test.yml
     needs: linters
 
-    strategy:
-      matrix:
-        python-version: [ "3.7", "3.8", "3.9", "3.10", "3.11" ]
-
-    steps:
-      - name: Check out Git repository
-        uses: actions/checkout@v3
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Install Python dependencies
-        run: pip install ".[test]"
-
-      - name: Run pytest
-        run: pytest
   build:
     name: Build
     runs-on: ubuntu-latest
@@ -91,4 +43,5 @@ jobs:
         with:
           files: |
             dist/*.whl
-          prerelease: ${{ github.ref_name }} =~ ^v[0-9]+\.[0-9]+\.[0-9]+[a|b]\d+$
+          prerelease: ${{ github.ref_name }} =~ ^v[0-9]+\.[0-9]+\.[0-9]+[rc]\d+$
+          body_path: CHANGELOG.md
