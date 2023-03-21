@@ -2,7 +2,6 @@ import asyncio
 import collections
 import datetime
 import typing
-from importlib.metadata import version
 
 import aiohttp
 from tabulate import tabulate
@@ -63,7 +62,7 @@ def convert_timestamp(timestamp: str) -> datetime.datetime:
 
 
 def get_errors(
-    start: datetime.datetime, end: datetime.datetime, attendances: LIST_JSON_RESPONSE, employees: LIST_JSON_RESPONSE
+        start: datetime.datetime, end: datetime.datetime, attendances: LIST_JSON_RESPONSE, employees: LIST_JSON_RESPONSE
 ) -> GET_ERRORS:
     preconditions: typing.Dict[str, typing.List[str]] = collections.defaultdict(list)
     employee_errors: typing.Dict[str, typing.List[verifier.Error]] = collections.defaultdict(list)
@@ -109,7 +108,6 @@ def get_errors(
 def main(start: datetime.datetime, end: datetime.datetime, api_key: str):  # pragma: no cover
     print("FactorialHR working time verification")
     print("Source code available at https://github.com/leon1995/fwtv")
-    print(f'Version: {version("fwtv")}')
     print("")
 
     async def fetch_data() -> typing.Tuple[LIST_JSON_RESPONSE, LIST_JSON_RESPONSE]:
