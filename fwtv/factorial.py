@@ -62,7 +62,7 @@ def convert_timestamp(timestamp: str) -> datetime.datetime:
 
 
 def get_errors(
-        start: datetime.datetime, end: datetime.datetime, attendances: LIST_JSON_RESPONSE, employees: LIST_JSON_RESPONSE
+    start: datetime.datetime, end: datetime.datetime, attendances: LIST_JSON_RESPONSE, employees: LIST_JSON_RESPONSE
 ) -> GET_ERRORS:
     preconditions: typing.Dict[str, typing.List[str]] = collections.defaultdict(list)
     employee_errors: typing.Dict[str, typing.List[verifier.Error]] = collections.defaultdict(list)
