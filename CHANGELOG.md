@@ -9,6 +9,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0)
 
 - Terminal output has been replaced by a `pyside6` application
 
+### Removed
+
+- Removed support for older versions than `3.11`
+
 ## [1.1.0] - 2023-03-10
 
 ### Changed
