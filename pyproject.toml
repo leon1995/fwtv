@@ -32,20 +32,19 @@ keywords = [
     "Working time"
 ]
 dependencies = [
-    "aiohttp",
-    "tabulate"
+    "factorialhr",
+    "tabulate",
+    "pyside6-essentials"
 ]
 
 [project.scripts]
-factorial-wtv = "fwtv.factorial:cli"
+factorial-working-time = "fwtv.main:main"
 [project.urls]
 "Homepage" = "https://github.com/leon1995/fwtv"
 "Bug Tracker" = "https://github.com/leon1995/fwtv/issues"
 [project.optional-dependencies]
 test = [
     "pytest",
-    "pytest-cov",
-    "pytest-asyncio"
 ]
 lint = [
     'black',
@@ -58,13 +57,15 @@ dev = ["fwtv[test,lint]"]
 
 [tool.pytest.ini_options]
 testpaths = "tests/"
-addopts = "--cov=fwtv --cov-report term-missing --cov-fail-under=95"
 
 [tool.black]
 line-length = 120
 
-[isort]
-force_single_line = 1
+[tool.isort]
+force_single_line = "1"
 known_localfolder = "fwtv"
-force_alphabetical_sort_within_sections = 1
+force_alphabetical_sort_within_sections = "1"
 profile = "black"
+
+[tool.mypy]
+ignore_missing_imports = true

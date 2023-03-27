@@ -6,19 +6,17 @@ This script verifies attendances whether they comply with german law. In particu
 - Whether the work time is longer than 10 hours without a break of 11 hours
 
 It also provides a way to fetch the attendances of all employees from [FactorialHR](https://apidoc.factorialhr.com/docs) using a [company api-key](https://help.factorialhr.com/how-to-create-api-keys-in-factorial). Its then printed nicely to the console using [tabulate](https://pypi.org/project/tabulate/).
+
+![main_window](./docs/images/main_window.png "Main Window")
+
 ## Disclaimer
 
 I do not guarantee that this package complies with german law all the time. Changes may occur anytime. Use at your own risk.
 
 ## Usage
 
-Install the tool with `pip install fwtv` and then use it by providing an iso-formatted start date and an iso-formatted end date which represent the time interval that will be verified.
-
-E.g.
-```
-factorial-wtv 2023-01-01 2023-02-01 <api-key>
-```
-will verify all attendances of all employees in january 2023.
+- Install the tool with `pip install fwtv`
+- Run tool with `factorial-working-time`
 
 ### Preconditions
 
