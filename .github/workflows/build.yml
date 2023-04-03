@@ -92,6 +92,12 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: Download Artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: distributions
+          path: dist
+
       - name: Install Python dependencies
         run: pip install ${{ matrix.distribution }}[test]
 
