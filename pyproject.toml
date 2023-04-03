@@ -1,6 +1,6 @@
 [build-system]
-requires = ["flit_core >=3.2"]
-build-backend = "flit_core.buildapi"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [project]
 name = "fwtv"
@@ -30,11 +30,14 @@ keywords = [
 dependencies = [
     "factorialhr",
     "tabulate",
-    "pyside6-essentials"
+    "pyside6-essentials",
+    "outcome",
+    "trio",
 ]
 
 [project.scripts]
 factorial-working-time = "fwtv.main:main"
+
 [project.urls]
 "Homepage" = "https://github.com/leon1995/fwtv"
 "Bug Tracker" = "https://github.com/leon1995/fwtv/issues"
@@ -50,6 +53,21 @@ lint = [
     'isort'
 ]
 dev = ["fwtv[test,lint]"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "src/fwtv/**/*.py",
+    "README.md",
+    "pyproject.toml",
+    "CHANGELOG.md"
+]
+support-legacy = false
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/fwtv"]
+
+[tool.hatch.version]
+path = "src/fwtv/__init__.py"
 
 [tool.pytest.ini_options]
 testpaths = "tests/"

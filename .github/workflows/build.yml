@@ -1,0 +1,99 @@
+name: Build package
+
+on:
+  workflow_call:
+  pull_request:
+    types: [ opened, synchronize, reopened, ready_for_review ]
+
+jobs:
+  linters:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install Python dependencies
+        run: pip install ".[dev]"
+
+      - name: Run Black
+        run: black --check src tests
+
+      - name: Run isort
+        run: isort src tests -c
+
+      - name: Run flake8
+        run: flake8 src tests
+
+      - name: Run mypy
+        run: mypy src tests
+
+  build:
+    needs: linters
+    runs-on: ubuntu-latest
+    outputs:
+      WHL: ${{ steps.filenames.outputs.WHL }}
+      TARGZ: ${{ steps.filenames.outputs.TARGZ }}
+
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Setup hatch
+        run: python -m pip install hatch
+
+      - name: Set new version
+        if: startsWith(github.ref, 'refs/tags/v')
+        run: |
+          python -m hatch version ${GITHUB_REF/refs\/tags\/v/}
+
+      - name: Build package
+        run: python -m hatch build
+
+      - name: Set filenames in output
+        id: filenames
+        run: |
+          echo WHL=$(echo dist/*.whl) >> $GITHUB_OUTPUT
+          echo TARGZ=$(echo dist/*.tar.gz) >> $GITHUB_OUTPUT
+
+      - name: Archive package
+        uses: actions/upload-artifact@v3
+        with:
+          name: distributions
+          path: dist
+          retention-days: 5
+
+  tests:
+    needs: build
+
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, windows-latest, macos-latest ]
+        distribution: [ "${{ needs.build.outputs.WHL }}",
+                        "${{ needs.build.outputs.TARGZ }}" ]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install Python dependencies
+        run: pip install ${{ matrix.distribution }}[test]
+
+      - name: Run pytest
+        run: pytest
