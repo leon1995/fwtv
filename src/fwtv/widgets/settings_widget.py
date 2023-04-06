@@ -16,6 +16,7 @@ class TeamSettingWidget(QWidget):
         self.qh.addWidget(self.label)
 
         self.selector = QComboBox(self)
+        self.selector.setEditable(True)
         self.qh.addWidget(self.selector)
 
         self.setLayout(self.qh)

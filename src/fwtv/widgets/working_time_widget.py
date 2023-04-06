@@ -32,23 +32,24 @@ def get_errors(
             if not attendance.workable:
                 continue  # it has been declared as a break
             try:
-                a = verifier.Attendance(clock_in=clock_in, clock_out=attendance.clock_out)
+                # automated time tracking is not precise enough and also is not able to handle seconds precise enough
+                a = verifier.Attendance(
+                    clock_in=clock_in.replace(second=0), clock_out=attendance.clock_out.replace(second=0)
+                )
                 employee_attendances.append(a)
             except ValueError as e:
                 preconditions[name].append(str(e))
                 continue
-        errors = []
-        for error in verifier.verify_attendances(employee_attendances):
-            # count error if for 6 or 9 hours working time has been + 1 min, because of inaccurate
-            # automated clock in/out feature of FactorialHR
-            if error.reason == "Attended more than 6 hours without a cumulated break of 30 min":
-                if verifier.calculate_time_attended(error.attendances) >= datetime.timedelta(hours=6, minutes=1):
-                    errors.append(error)
-            elif error.reason == "Attended more than 9 hours without a cumulated break of 45 min":
-                if verifier.calculate_time_attended(error.attendances) >= datetime.timedelta(hours=9, minutes=1):
-                    errors.append(error)
-            else:
-                errors.append(error)
+
+        errors = verifier.verify_attendances(employee_attendances)
+        # ignore all errors where the time attended is 1 min above the limit, as factorial's automated time tracking
+        # is not precises enough
+        errors = [
+            e
+            for e in errors
+            if e.time_attended != datetime.timedelta(hours=6, minutes=1)
+            and e.time_attended != datetime.timedelta(hours=9, minutes=1)
+        ]
         if errors:
             employee_errors[name] = errors
     return preconditions, employee_errors

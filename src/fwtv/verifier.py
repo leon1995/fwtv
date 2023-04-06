@@ -113,7 +113,7 @@ def verify_attendances(attendances: typing.List[Attendance]) -> typing.List[Erro
             break_time = attendance.clock_in - current_attendances[-1].clock_out
         else:
             break_time = datetime.timedelta(seconds=0)  # first attendance, there is no break
-        if break_time > datetime.timedelta(hours=11):
+        if break_time >= datetime.timedelta(hours=11):
             # reset relevant as 11-hour break has reached between previous attendances and current attendance
             current_attendances = [attendance]
         else:
@@ -122,13 +122,17 @@ def verify_attendances(attendances: typing.List[Attendance]) -> typing.List[Erro
         cumulated_time_attended = calculate_time_attended(current_attendances)
         cumulated_break_time = calculate_break_time(current_attendances)
         reason = None
+        reset = False
         if cumulated_time_attended > HOURS_6 and cumulated_break_time < MINUTES_30:
             reason = "Attended more than 6 hours without a cumulated break of 30 min"
         if cumulated_time_attended > HOURS_9 and cumulated_break_time < MINUTES_45:
             reason = "Attended more than 9 hours without a cumulated break of 45 min"
         if cumulated_time_attended > HOURS_10:
             reason = "Attended more than 10 hours without a single break of 11 hours"
+            reset = True
         if reason:
             errors.append(Error(reason=reason, attendances=current_attendances[:]))
-
+        if reset:
+            # in order to avoid duplicate errors, reset the counter
+            current_attendances = [attendance]
     return errors

@@ -70,7 +70,9 @@ class PreconditionErrorsTableWidget(ErrorTable):
 
 class FailuresTableWidget(ErrorTable):
     def __init__(self, *args, **kwargs):
-        super().__init__(["Name", "Day(s)", "Reason", "Break", "Attended"], *args, **kwargs)
+        super().__init__(
+            ["Name", "Affected Day(s)", "Reason", "Cumulated Break", "Cumulated Attendance"], *args, **kwargs
+        )
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
     def set_data(self, data: dict[str, list[list[str]]]):
