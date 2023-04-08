@@ -3,11 +3,11 @@ All notable changes to fwtv module will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0)
 
-## [master]
+## [2.1.0] - 2023-04-08
 
 ### Changed
 
-- Set team combobox to editable
+- Choose between teams and single employee and made combobox editable
 - Renamed labels to `Affected Day(s)`, `Cumulated Break` and `Cumulated Attendance`
 - Avoid duplications by resetting `current_attendances` list
 - Ignore seconds of each attendance, because factorials automated time tracking is not precise

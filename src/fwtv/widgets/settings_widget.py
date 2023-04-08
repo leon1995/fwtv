@@ -7,16 +7,16 @@ from PySide6.QtWidgets import QSizePolicy
 from PySide6.QtWidgets import QWidget
 
 
-class TeamSettingWidget(QWidget):
+class TeamOrEmployeeSettingWidget(QWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.qh = QHBoxLayout(self)
-        self.label = QLabel("Select a team", self)
-        self.label.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+        self.label = QLabel("Select a team or an employee", self)
         self.qh.addWidget(self.label)
 
         self.selector = QComboBox(self)
         self.selector.setEditable(True)
+        self.selector.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.qh.addWidget(self.selector)
 
         self.setLayout(self.qh)
@@ -27,7 +27,6 @@ class DateSettingWidget(QWidget):
         super().__init__(*args, **kwargs)
         self.qh = QHBoxLayout(self)
         self.label = QLabel(label, self)
-        self.label.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         self.qh.addWidget(self.label)
 
         self.date = QDateEdit(date, self)
@@ -42,7 +41,7 @@ class SettingsWidget(QWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.qh = QHBoxLayout(self)
-        self.team_selector = TeamSettingWidget(self)
+        self.team_selector = TeamOrEmployeeSettingWidget(self)
         self.qh.addWidget(self.team_selector)
 
         self.start_picker = DateSettingWidget("Start on", QDate.currentDate().addMonths(-1), self)

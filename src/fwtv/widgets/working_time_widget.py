@@ -1,9 +1,9 @@
 import collections
 import datetime
 
-from factorialhr import models
 from PySide6.QtWidgets import QVBoxLayout
 from PySide6.QtWidgets import QWidget
+from factorialhr import models
 
 from fwtv import verifier
 from fwtv.widgets import settings_widget
@@ -61,6 +61,7 @@ class WorkingTimeWidget(QWidget):
         self.teams = []
         self.attendances = []
         self.employees_by_team = {}
+        self.employees = []
         self.qv = QVBoxLayout(self)
 
         self.settings_widget = settings_widget.SettingsWidget(self)
@@ -85,26 +86,31 @@ class WorkingTimeWidget(QWidget):
     ):
         self.attendances = attendances
         self.teams = teams
+        self.employees = employees
         self.employees_by_team = {t.id: [e for e in employees if e.id in t.employee_ids] for t in teams}
         for i in range(self.settings_widget.team_selector.selector.count()):
             self.settings_widget.team_selector.selector.removeItem(i)
         self.settings_widget.team_selector.selector.addItems([team.name for team in teams])
+        self.settings_widget.team_selector.selector.addItems([employee.full_name for employee in employees])
         self.update_data()
 
-    @property
-    def selected_team(self) -> models.Team | None:
+    def get_current_selection(self) -> models.Team | models.Employee | None:
         index = self.settings_widget.team_selector.selector.currentIndex()
-        try:
+        if 0 <= index < len(self.teams):
             return self.teams[index]
-        except IndexError:
+        elif 0 <= (index := index - len(self.teams)) < len(self.employees):
+            return self.employees[index]
+        else:
             return None
 
     def update_data(self):
-        if self.selected_team is None:
-            self.preconditions_table.set_data({})
-            self.failures_table.set_data({})
-            return
-        employees = self.employees_by_team[self.selected_team.id]
+        selection = self.get_current_selection()
+        employees = []
+        if isinstance(selection, models.Team):
+            employees = self.employees_by_team[selection.id]
+        elif isinstance(selection, models.Employee):
+            employees = [selection]
+
         preconditions, errors = get_errors(
             self.settings_widget.start_picker.date.date().toPython(),
             self.settings_widget.end_picker.date.date().toPython(),
