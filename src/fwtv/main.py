@@ -1,11 +1,12 @@
 import sys
 
-from factorialhr import endpoints
 from PySide6.QtWidgets import QApplication
 from PySide6.QtWidgets import QMessageBox
 from PySide6.QtWidgets import QVBoxLayout
 from PySide6.QtWidgets import QWidget
+from factorialhr import endpoints
 
+import fwtv
 from fwtv.objects import async_converter
 from fwtv.widgets import login_widget
 from fwtv.widgets import working_time_widget
@@ -14,7 +15,7 @@ from fwtv.widgets import working_time_widget
 class MainWindow(QWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.setWindowTitle("Factorial working time verification")
+        self.setWindowTitle(f"Factorial working time verification - version {fwtv.__version__}")
         self.qv = QVBoxLayout()
         self.login = login_widget.LoginWidget(self)
         self.qv.addWidget(self.login)

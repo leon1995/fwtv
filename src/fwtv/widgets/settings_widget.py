@@ -3,6 +3,7 @@ from PySide6.QtWidgets import QComboBox
 from PySide6.QtWidgets import QDateEdit
 from PySide6.QtWidgets import QHBoxLayout
 from PySide6.QtWidgets import QLabel
+from PySide6.QtWidgets import QDoubleSpinBox
 from PySide6.QtWidgets import QSizePolicy
 from PySide6.QtWidgets import QWidget
 
@@ -37,6 +38,23 @@ class DateSettingWidget(QWidget):
         self.setLayout(self.qh)
 
 
+class ToleranceWidget(QWidget):
+    def __init__(self, default: int, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.qh = QHBoxLayout(self)
+        self.label = QLabel("Tolerance", self)
+        self.qh.addWidget(self.label)
+
+        self.tolerance = QDoubleSpinBox(self)
+        self.tolerance.setSingleStep(1)
+        self.tolerance.setDecimals(0)
+        self.tolerance.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
+        self.tolerance.setValue(default)
+        self.qh.addWidget(self.tolerance)
+
+        self.setLayout(self.qh)
+
+
 class SettingsWidget(QWidget):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -49,5 +67,8 @@ class SettingsWidget(QWidget):
 
         self.end_picker = DateSettingWidget("End on", QDate.currentDate(), self)
         self.qh.addWidget(self.end_picker)
+
+        self.tolerance_selector = ToleranceWidget(1)
+        self.qh.addWidget(self.tolerance_selector)
 
         self.setLayout(self.qh)

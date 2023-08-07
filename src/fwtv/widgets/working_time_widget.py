@@ -1,9 +1,9 @@
 import collections
 import datetime
 
-from factorialhr import models
 from PySide6.QtWidgets import QVBoxLayout
 from PySide6.QtWidgets import QWidget
+from factorialhr import models
 
 from fwtv import verifier
 from fwtv.widgets import settings_widget
@@ -11,7 +11,11 @@ from fwtv.widgets import table_widget
 
 
 def get_errors(
-    start: datetime.date, end: datetime.date, attendances: list[models.Attendance], employees: list[models.Employee]
+    start: datetime.date,
+    end: datetime.date,
+    attendances: list[models.Attendance],
+    employees: list[models.Employee],
+    tolerance: int,
 ) -> tuple[dict[str, list[str]], dict[str, list[verifier.Error]]]:
     preconditions: dict[str, list[str]] = collections.defaultdict(list)
     employee_errors: dict[str, list[verifier.Error]] = collections.defaultdict(list)
@@ -42,13 +46,13 @@ def get_errors(
                 continue
 
         errors = verifier.verify_attendances(employee_attendances)
-        # ignore all errors where the time attended is 1 min above the limit, as factorial's automated time tracking
-        # is not precises enough
+        # ignore all errors where the time attended is the tolerance above the limit, as factorial's automated time
+        # tracking is not precises enough
         errors = [
             e
             for e in errors
-            if e.time_attended != datetime.timedelta(hours=6, minutes=1)
-            and e.time_attended != datetime.timedelta(hours=9, minutes=1)
+            if e.time_attended > datetime.timedelta(hours=6, minutes=tolerance)
+            and e.time_attended > datetime.timedelta(hours=9, minutes=tolerance)
         ]
         if errors:
             employee_errors[name] = errors
@@ -78,6 +82,7 @@ class WorkingTimeWidget(QWidget):
         self.settings_widget.team_selector.selector.currentIndexChanged.connect(self.update_data)
         self.settings_widget.start_picker.date.dateChanged.connect(self.update_data)
         self.settings_widget.end_picker.date.dateChanged.connect(self.update_data)
+        self.settings_widget.tolerance_selector.tolerance.valueChanged.connect(self.update_data)
 
         self.update_data()
 
@@ -116,15 +121,10 @@ class WorkingTimeWidget(QWidget):
             self.settings_widget.end_picker.date.date().toPython(),
             self.attendances,
             employees,
+            int(self.settings_widget.tolerance_selector.tolerance.value()),
         )
         entries = collections.defaultdict(list)
         for k in preconditions.keys():
             entries[k] = [preconditions[k]]
         self.preconditions_table.set_data(entries)
-        entries = collections.defaultdict(list)
-        for name, error in errors.items():
-            for e in error:
-                affected_days = [str(day) for day in e.days_affected]
-                affected_days.sort()
-                entries[name].append([", ".join(affected_days), e.reason, str(e.break_time), str(e.time_attended)])
-        self.failures_table.set_data(entries)
+        self.failures_table.set_data(errors)
