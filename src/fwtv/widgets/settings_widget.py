@@ -1,9 +1,9 @@
 from PySide6.QtCore import QDate
 from PySide6.QtWidgets import QComboBox
 from PySide6.QtWidgets import QDateEdit
+from PySide6.QtWidgets import QDoubleSpinBox
 from PySide6.QtWidgets import QHBoxLayout
 from PySide6.QtWidgets import QLabel
-from PySide6.QtWidgets import QDoubleSpinBox
 from PySide6.QtWidgets import QSizePolicy
 from PySide6.QtWidgets import QWidget
 

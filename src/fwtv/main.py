@@ -1,10 +1,10 @@
 import sys
 
+from factorialhr import endpoints
 from PySide6.QtWidgets import QApplication
 from PySide6.QtWidgets import QMessageBox
 from PySide6.QtWidgets import QVBoxLayout
 from PySide6.QtWidgets import QWidget
-from factorialhr import endpoints
 
 import fwtv
 from fwtv.objects import async_converter

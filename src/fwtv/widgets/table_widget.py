@@ -5,10 +5,13 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QClipboard
 from PySide6.QtGui import QKeyEvent
 from PySide6.QtWidgets import QHeaderView
+from PySide6.QtWidgets import QLabel
 from PySide6.QtWidgets import QSizePolicy
 from PySide6.QtWidgets import QTableView
-from PySide6.QtWidgets import QTableWidget, QLabel
-from PySide6.QtWidgets import QTableWidgetItem, QWidget, QVBoxLayout
+from PySide6.QtWidgets import QTableWidget
+from PySide6.QtWidgets import QTableWidgetItem
+from PySide6.QtWidgets import QVBoxLayout
+from PySide6.QtWidgets import QWidget
 
 from fwtv import verifier
 

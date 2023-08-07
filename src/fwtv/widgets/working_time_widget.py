@@ -1,9 +1,9 @@
 import collections
 import datetime
 
+from factorialhr import models
 from PySide6.QtWidgets import QVBoxLayout
 from PySide6.QtWidgets import QWidget
-from factorialhr import models
 
 from fwtv import verifier
 from fwtv.widgets import settings_widget
