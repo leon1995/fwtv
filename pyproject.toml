@@ -28,7 +28,7 @@ keywords = [
     "Working time"
 ]
 dependencies = [
-    "factorialhr",
+    "factorialhr==2.0.0",
     "tabulate",
     "pyside6-essentials",
     "outcome",
