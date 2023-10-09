@@ -3,6 +3,17 @@ All notable changes to fwtv module will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0)
 
+## [2.3.0] - 2023-10-09
+
+### Added
+
+- possibility to change the dates from when to when the data is fetched
+- possibility to change the timeout for fetching the data
+
+### Fixed
+
+- additional information showed wrong information, if the table contained more than one error
+
 ## [2.2.0] - 2023-08-07
 
 ## Added

@@ -83,12 +83,12 @@ class AdditionalInformationWidget(QWidget):
 
         self.attendances = QTableWidget(len(error.attendances), 2, self)
         for i, a in enumerate(error.attendances):
-            column_item = QTableWidgetItem(a.clock_in.strftime("%H:%M"))
+            column_item = QTableWidgetItem(a.clock_in.strftime("%d.%m %H:%M"))
             column_item.setFlags(
                 Qt.ItemFlag.ItemNeverHasChildren | Qt.ItemFlag.ItemIsAutoTristate | Qt.ItemFlag.ItemIsEnabled
             )
             self.attendances.setItem(i, 0, column_item)
-            column_item = QTableWidgetItem(a.clock_out.strftime("%H:%M"))
+            column_item = QTableWidgetItem(a.clock_out.strftime("%d.%m %H:%M"))
             column_item.setFlags(
                 Qt.ItemFlag.ItemNeverHasChildren | Qt.ItemFlag.ItemIsAutoTristate | Qt.ItemFlag.ItemIsEnabled
             )
@@ -124,9 +124,9 @@ class FailuresTableWidget(ErrorTable):
         self.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch)
 
     def display_additional_information(self, row: int, _: int):
-        rows = []
+        rows: list[tuple[str, verifier.Error]] = []
         for name, error in self.data.items():
             for e in error:
-                rows.append((name, e))
+                rows.insert(0, (name, e))  # instead of reversing
         self.new_window = AdditionalInformationWidget(rows[row][0], rows[row][1])
         self.new_window.show()

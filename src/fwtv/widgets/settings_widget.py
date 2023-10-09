@@ -38,21 +38,24 @@ class DateSettingWidget(QWidget):
         self.setLayout(self.qh)
 
 
-class ToleranceWidget(QWidget):
-    def __init__(self, default: int, *args, **kwargs):
+class IntegerPickerWidget(QWidget):
+    def __init__(self, label: str, default: int, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.qh = QHBoxLayout(self)
-        self.label = QLabel("Tolerance", self)
+        self.label = QLabel(label, self)
         self.qh.addWidget(self.label)
 
-        self.tolerance = QDoubleSpinBox(self)
-        self.tolerance.setSingleStep(1)
-        self.tolerance.setDecimals(0)
-        self.tolerance.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
-        self.tolerance.setValue(default)
-        self.qh.addWidget(self.tolerance)
+        self.picker = QDoubleSpinBox(self)
+        self.picker.setSingleStep(1)
+        self.picker.setDecimals(0)
+        self.picker.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
+        self.picker.setValue(default)
+        self.qh.addWidget(self.picker)
 
         self.setLayout(self.qh)
+
+    def value(self) -> int:
+        return int(self.picker.value())
 
 
 class SettingsWidget(QWidget):
@@ -62,13 +65,16 @@ class SettingsWidget(QWidget):
         self.team_selector = TeamOrEmployeeSettingWidget(self)
         self.qh.addWidget(self.team_selector)
 
-        self.start_picker = DateSettingWidget("Start on", QDate.currentDate().addMonths(-1), self)
+        last_month = QDate.currentDate().addMonths(-1)
+        self.start_picker = DateSettingWidget("Start on", QDate(last_month.year(), last_month.month(), 1), self)
         self.qh.addWidget(self.start_picker)
 
-        self.end_picker = DateSettingWidget("End on", QDate.currentDate(), self)
+        self.end_picker = DateSettingWidget(
+            "End on", QDate(last_month.year(), last_month.month(), last_month.daysInMonth()).addDays(1), self
+        )
         self.qh.addWidget(self.end_picker)
 
-        self.tolerance_selector = ToleranceWidget(1)
+        self.tolerance_selector = IntegerPickerWidget("Tolerance", 1)
         self.qh.addWidget(self.tolerance_selector)
 
         self.setLayout(self.qh)

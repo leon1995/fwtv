@@ -31,7 +31,11 @@ class MainWindow(QWidget):
         self.login.button.hide()
         async with endpoints.NetworkHandler(self.login.key.text()) as api:
             try:
-                _attendances = await endpoints.AttendanceEndpoint(api).all()
+                _attendances = await endpoints.AttendanceEndpoint(api).all(
+                    date_from=self.login.start_picker.date.date().toPython(),
+                    date_to=self.login.end_picker.date.date().toPython(),
+                    timeout=self.login.timeout.value(),
+                )
                 _employees = await endpoints.EmployeesEndpoint(api).all()
                 _teams = await endpoints.TeamsEndpoint(api).all()
             except Exception as e:

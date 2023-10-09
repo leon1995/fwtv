@@ -82,7 +82,7 @@ class WorkingTimeWidget(QWidget):
         self.settings_widget.team_selector.selector.currentIndexChanged.connect(self.update_data)
         self.settings_widget.start_picker.date.dateChanged.connect(self.update_data)
         self.settings_widget.end_picker.date.dateChanged.connect(self.update_data)
-        self.settings_widget.tolerance_selector.tolerance.valueChanged.connect(self.update_data)
+        self.settings_widget.tolerance_selector.picker.valueChanged.connect(self.update_data)
 
         self.update_data()
 
@@ -121,7 +121,7 @@ class WorkingTimeWidget(QWidget):
             self.settings_widget.end_picker.date.date().toPython(),
             self.attendances,
             employees,
-            int(self.settings_widget.tolerance_selector.tolerance.value()),
+            self.settings_widget.tolerance_selector.value(),
         )
         entries = collections.defaultdict(list)
         for k in preconditions.keys():
