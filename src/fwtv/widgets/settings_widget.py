@@ -1,18 +1,26 @@
+"""Module for setting widgets."""
+
+import typing
+
 from PySide6.QtCore import QDate
-from PySide6.QtWidgets import QComboBox
-from PySide6.QtWidgets import QDateEdit
-from PySide6.QtWidgets import QDoubleSpinBox
-from PySide6.QtWidgets import QHBoxLayout
-from PySide6.QtWidgets import QLabel
-from PySide6.QtWidgets import QSizePolicy
-from PySide6.QtWidgets import QWidget
+from PySide6.QtWidgets import (
+    QComboBox,
+    QDateEdit,
+    QDoubleSpinBox,
+    QHBoxLayout,
+    QLabel,
+    QSizePolicy,
+    QWidget,
+)
 
 
 class TeamOrEmployeeSettingWidget(QWidget):
-    def __init__(self, *args, **kwargs):
+    """A widget to select a team or employee."""
+
+    def __init__(self, *args: typing.Any, **kwargs: typing.Any):
         super().__init__(*args, **kwargs)
         self.qh = QHBoxLayout(self)
-        self.label = QLabel("Select a team or an employee", self)
+        self.label = QLabel('Select a team or an employee', self)
         self.qh.addWidget(self.label)
 
         self.selector = QComboBox(self)
@@ -24,7 +32,9 @@ class TeamOrEmployeeSettingWidget(QWidget):
 
 
 class DateSettingWidget(QWidget):
-    def __init__(self, label: str, date: QDate, *args, **kwargs):
+    """A picker for dates."""
+
+    def __init__(self, label: str, date: QDate, *args: typing.Any, **kwargs: typing.Any):
         super().__init__(*args, **kwargs)
         self.qh = QHBoxLayout(self)
         self.label = QLabel(label, self)
@@ -32,14 +42,16 @@ class DateSettingWidget(QWidget):
 
         self.date = QDateEdit(date, self)
         self.date.setCalendarPopup(True)
-        self.date.setDisplayFormat("yyyy-MM-dd")
+        self.date.setDisplayFormat('yyyy-MM-dd')
         self.qh.addWidget(self.date)
 
         self.setLayout(self.qh)
 
 
 class IntegerPickerWidget(QWidget):
-    def __init__(self, label: str, default: int, *args, **kwargs):
+    """A picker for integers."""
+
+    def __init__(self, label: str, default: int, *args: typing.Any, **kwargs: typing.Any):
         super().__init__(*args, **kwargs)
         self.qh = QHBoxLayout(self)
         self.label = QLabel(label, self)
@@ -55,26 +67,31 @@ class IntegerPickerWidget(QWidget):
         self.setLayout(self.qh)
 
     def value(self) -> int:
+        """Get the value of the integer picker."""
         return int(self.picker.value())
 
 
 class SettingsWidget(QWidget):
-    def __init__(self, *args, **kwargs):
+    """Provide some settings for the user."""
+
+    def __init__(self, *args: typing.Any, **kwargs: typing.Any):
         super().__init__(*args, **kwargs)
         self.qh = QHBoxLayout(self)
         self.team_selector = TeamOrEmployeeSettingWidget(self)
         self.qh.addWidget(self.team_selector)
 
         last_month = QDate.currentDate().addMonths(-1)
-        self.start_picker = DateSettingWidget("Start on", QDate(last_month.year(), last_month.month(), 1), self)
+        self.start_picker = DateSettingWidget('Start on', QDate(last_month.year(), last_month.month(), 1), self)
         self.qh.addWidget(self.start_picker)
 
         self.end_picker = DateSettingWidget(
-            "End on", QDate(last_month.year(), last_month.month(), last_month.daysInMonth()).addDays(1), self
+            'End on',
+            QDate(last_month.year(), last_month.month(), last_month.daysInMonth()).addDays(1),
+            self,
         )
         self.qh.addWidget(self.end_picker)
 
-        self.tolerance_selector = IntegerPickerWidget("Tolerance", 1)
+        self.tolerance_selector = IntegerPickerWidget('Tolerance', 1)
         self.qh.addWidget(self.tolerance_selector)
 
         self.setLayout(self.qh)

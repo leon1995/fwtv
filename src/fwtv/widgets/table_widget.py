@@ -1,23 +1,29 @@
+"""Module for table widgets."""
+
 import collections
+import typing
 
 import tabulate
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QClipboard
-from PySide6.QtGui import QKeyEvent
-from PySide6.QtWidgets import QHeaderView
-from PySide6.QtWidgets import QLabel
-from PySide6.QtWidgets import QSizePolicy
-from PySide6.QtWidgets import QTableView
-from PySide6.QtWidgets import QTableWidget
-from PySide6.QtWidgets import QTableWidgetItem
-from PySide6.QtWidgets import QVBoxLayout
-from PySide6.QtWidgets import QWidget
+from PySide6.QtGui import QClipboard, QKeyEvent
+from PySide6.QtWidgets import (
+    QHeaderView,
+    QLabel,
+    QSizePolicy,
+    QTableView,
+    QTableWidget,
+    QTableWidgetItem,
+    QVBoxLayout,
+    QWidget,
+)
 
 from fwtv import verifier
 
 
 class ErrorTable(QTableWidget):
-    def __init__(self, labels: list[str], *args, **kwargs):
+    """Display errors to user."""
+
+    def __init__(self, labels: list[str], *args: typing.Any, **kwargs: typing.Any):
         self.labels = labels
         super().__init__(0, len(self.labels), *args, **kwargs)
         self.setHorizontalHeaderLabels(self.labels)
@@ -46,25 +52,26 @@ class ErrorTable(QTableWidget):
             )
             self.setItem(row_index, column_index, column_item)
 
-    def keyPressEvent(self, event: QKeyEvent):
+    def keyPressEvent(self, event: QKeyEvent):  # noqa: N802
+        """Handle key press events."""
         super().keyPressEvent(event)
         if event.key() == Qt.Key.Key_C and (event.modifiers() & Qt.KeyboardModifier.ControlModifier):
             row_by_index = collections.defaultdict(list)
             for index in self.selectedIndexes():
                 row_by_index[index.row()].append(index.data())
-            rows = []
-            for row in row_by_index.values():
-                rows.append(row)
-            table = tabulate.tabulate(rows, headers=self.labels, tablefmt="orgtbl")
+            table = tabulate.tabulate(row_by_index.values(), headers=self.labels, tablefmt='orgtbl')
             QClipboard().setText(table)
 
 
 class PreconditionErrorsTableWidget(ErrorTable):
-    def __init__(self, *args, **kwargs):
-        super().__init__(["Name", "Error"], *args, **kwargs)
+    """Display precondition errors to user."""
+
+    def __init__(self, *args: typing.Any, **kwargs: typing.Any):
+        super().__init__(['Name', 'Error'], *args, **kwargs)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
     def set_data(self, data: dict[str, list[list[str]]]):
+        """Set precondition data."""
         super()._set_data(data)
         self.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
         if not any(data) and not self.isHidden():
@@ -74,7 +81,9 @@ class PreconditionErrorsTableWidget(ErrorTable):
 
 
 class AdditionalInformationWidget(QWidget):
-    def __init__(self, name: str, error: verifier.Error, *args, **kwargs):
+    """Display additional information to user."""
+
+    def __init__(self, name: str, error: verifier.Error, *args: typing.Any, **kwargs: typing.Any):
         super().__init__(*args, **kwargs)
         self.qv = QVBoxLayout(self)
 
@@ -83,17 +92,17 @@ class AdditionalInformationWidget(QWidget):
 
         self.attendances = QTableWidget(len(error.attendances), 2, self)
         for i, a in enumerate(error.attendances):
-            column_item = QTableWidgetItem(a.clock_in.strftime("%d.%m %H:%M"))
+            column_item = QTableWidgetItem(a.clock_in.strftime('%d.%m %H:%M'))
             column_item.setFlags(
                 Qt.ItemFlag.ItemNeverHasChildren | Qt.ItemFlag.ItemIsAutoTristate | Qt.ItemFlag.ItemIsEnabled
             )
             self.attendances.setItem(i, 0, column_item)
-            column_item = QTableWidgetItem(a.clock_out.strftime("%d.%m %H:%M"))
+            column_item = QTableWidgetItem(a.clock_out.strftime('%d.%m %H:%M'))
             column_item.setFlags(
                 Qt.ItemFlag.ItemNeverHasChildren | Qt.ItemFlag.ItemIsAutoTristate | Qt.ItemFlag.ItemIsEnabled
             )
             self.attendances.setItem(i, 1, column_item)
-        self.attendances.setHorizontalHeaderLabels(["Clock in", "Clock out"])
+        self.attendances.setHorizontalHeaderLabels(['Clock in', 'Clock out'])
         self.attendances.horizontalHeader().resizeSections(QHeaderView.ResizeMode.ResizeToContents)
         self.qv.addWidget(self.attendances)
 
@@ -104,26 +113,45 @@ class AdditionalInformationWidget(QWidget):
 
 
 class FailuresTableWidget(ErrorTable):
-    def __init__(self, *args, **kwargs):
+    """Display failures to user."""
+
+    def __init__(self, *args: typing.Any, **kwargs: typing.Any):
         super().__init__(
-            ["Name", "Affected Day(s)", "Reason", "Cumulated Break", "Cumulated Attendance"], *args, **kwargs
+            [
+                'Name',
+                'Affected Day(s)',
+                'Reason',
+                'Cumulated Break',
+                'Cumulated Attendance',
+            ],
+            *args,
+            **kwargs,
         )
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
-        self.data: dict[str, list[verifier.Error]] = dict()
+        self.data: dict[str, list[verifier.Error]] = {}
         self.cellDoubleClicked.connect(self.display_additional_information)
 
     def set_data(self, data: dict[str, list[verifier.Error]]):
+        """Set verification errors in failures table."""
         self.data = data
         entries = collections.defaultdict(list)
         for name, error in data.items():
             for e in error:
                 affected_days = [str(day) for day in e.days_affected]
                 affected_days.sort()
-                entries[name].append([", ".join(affected_days), e.reason, str(e.break_time), str(e.time_attended)])
+                entries[name].append(
+                    [
+                        ', '.join(affected_days),
+                        e.reason,
+                        str(e.break_time),
+                        str(e.time_attended),
+                    ]
+                )
         super()._set_data(entries)
         self.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch)
 
     def display_additional_information(self, row: int, _: int):
+        """Display additional information to the user."""
         rows: list[tuple[str, verifier.Error]] = []
         for name, error in self.data.items():
             for e in error:
