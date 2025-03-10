@@ -4,7 +4,7 @@ import datetime
 import sys
 import typing
 
-from factorialhr import endpoints
+import factorialhr
 from PySide6.QtWidgets import QApplication, QMessageBox, QVBoxLayout, QWidget
 
 import fwtv
@@ -30,23 +30,23 @@ class MainWindow(QWidget):
         self.login.button.clicked.connect(async_converter.ToAsync(self.fetch_data))
 
     async def fetch_data(self):
-        """Fetch dapa from the api."""
+        """Fetch data from the api."""
         self.login.button.hide()
-        async with endpoints.NetworkHandler(self.login.key.text()) as api:
+        async with factorialhr.ApiClient(auth=factorialhr.ApiKeyAuth(self.login.key.text())) as api:
             try:
-                _attendances = await endpoints.AttendanceEndpoint(api).all(
-                    date_from=typing.cast(
+                _attendances = await factorialhr.ShiftEndpoint(api).all(
+                    start_on=typing.cast(
                         datetime.date | None,
                         self.login.start_picker.date.date().toPython(),
                     ),
-                    date_to=typing.cast(
+                    end_on=typing.cast(
                         datetime.date | None,
                         self.login.end_picker.date.date().toPython(),
                     ),
                     timeout=self.login.timeout.value(),
                 )
-                _employees = await endpoints.EmployeesEndpoint(api).all()
-                _teams = await endpoints.TeamsEndpoint(api).all()
+                _employees = await factorialhr.EmployeeEndpoint(api).all()
+                _teams = await factorialhr.TeamEndpoint(api).all()
             except Exception as e:  # noqa: BLE001
                 message_box = QMessageBox(self)
                 message_box.setIcon(QMessageBox.Icon.Critical)
