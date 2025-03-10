@@ -101,7 +101,9 @@ class WorkingTimeWidget(QWidget):
         self.attendances = attendances
         self.teams = teams
         self.employees = employees
-        self.employees_by_team = {t.id: [e for e in employees if t.employee_ids and e.id in t.employee_ids] for t in teams}
+        self.employees_by_team = {
+            t.id: [e for e in employees if t.employee_ids and e.id in t.employee_ids] for t in teams
+        }
         for i in range(self.settings_widget.team_selector.selector.count()):
             self.settings_widget.team_selector.selector.removeItem(i)
         self.settings_widget.team_selector.selector.addItems([team.name for team in teams])
