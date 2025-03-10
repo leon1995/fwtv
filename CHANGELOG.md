@@ -3,6 +3,16 @@ All notable changes to fwtv module will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0)
 
+## Unreleased
+
+### Added
+
+- ruff and pyright for static code analysis
+
+### Fixed
+
+- add lower bound for dependencies
+
 ## [2.3.1] - 2023-10-09
 
 ### Fixed
