@@ -4,7 +4,7 @@ import collections
 import datetime
 import typing
 
-from factorialhr import models
+import factorialhr
 from PySide6.QtWidgets import QVBoxLayout, QWidget
 
 from fwtv import verifier
@@ -14,8 +14,8 @@ from fwtv.widgets import settings_widget, table_widget
 def get_errors(
     start: datetime.date,
     end: datetime.date,
-    attendances: list[models.Attendance],
-    employees: list[models.Employee],
+    attendances: list[factorialhr.Shift],
+    employees: list[factorialhr.Employee],
     tolerance: int,
 ) -> tuple[dict[str, list[str]], dict[str, list[verifier.Error]]]:
     """Get all errors found."""
@@ -26,22 +26,22 @@ def get_errors(
         employee_attendances: list[verifier.Attendance] = []
 
         for attendance in filter(lambda x: x.employee_id == employee.id, attendances):
+            attendance: factorialhr.Shift
             if not attendance.clock_in:
                 preconditions[name].append(f'no clock in time provided for attendance with id "{attendance.id}"')
                 continue
-            clock_in = attendance.clock_in
-            if clock_in.date() < start or clock_in.date() > end:
+            if attendance.date < start or attendance.date > end:
                 continue
             if not attendance.clock_out:
-                preconditions[name].append(f'no clock out time provided for clock in time "{clock_in}"')
+                preconditions[name].append(f'no clock out time provided for clock in time "{attendance.clock_in}"')
                 continue
             if not attendance.workable:
                 continue  # it has been declared as a break
             try:
                 # automated time tracking is not precise enough and also is not able to handle seconds precise enough
                 a = verifier.Attendance(
-                    clock_in=clock_in.replace(second=0),
-                    clock_out=attendance.clock_out.replace(second=0),
+                    clock_in=datetime.datetime.combine(attendance.date, attendance.clock_in.replace(second=0)),
+                    clock_out=datetime.datetime.combine(attendance.date, attendance.clock_out.replace(second=0)),
                 )
                 employee_attendances.append(a)
             except ValueError as e:
@@ -93,22 +93,22 @@ class WorkingTimeWidget(QWidget):
 
     def set_data(
         self,
-        teams: list[models.Team],
-        attendances: list[models.Attendance],
-        employees: list[models.Employee],
+        teams: list[factorialhr.Team],
+        attendances: list[factorialhr.Shift],
+        employees: list[factorialhr.Employee],
     ):
         """Fetch new data and update tables."""
         self.attendances = attendances
         self.teams = teams
         self.employees = employees
-        self.employees_by_team = {t.id: [e for e in employees if e.id in t.employee_ids] for t in teams}
+        self.employees_by_team = {t.id: [e for e in employees if t.employee_ids and e.id in t.employee_ids] for t in teams}
         for i in range(self.settings_widget.team_selector.selector.count()):
             self.settings_widget.team_selector.selector.removeItem(i)
         self.settings_widget.team_selector.selector.addItems([team.name for team in teams])
         self.settings_widget.team_selector.selector.addItems([employee.full_name for employee in employees])
         self.update_data()
 
-    def get_current_selection(self) -> models.Team | models.Employee | None:
+    def get_current_selection(self) -> factorialhr.Team | factorialhr.Employee | None:
         """Get current selection of teams."""
         index = self.settings_widget.team_selector.selector.currentIndex()
         if 0 <= index < len(self.teams):
@@ -121,9 +121,9 @@ class WorkingTimeWidget(QWidget):
         """Update the data and populate new data into tables."""
         selection = self.get_current_selection()
         employees = []
-        if isinstance(selection, models.Team):
+        if isinstance(selection, factorialhr.Team):
             employees = self.employees_by_team[selection.id]
-        elif isinstance(selection, models.Employee):
+        elif isinstance(selection, factorialhr.Employee):
             employees = [selection]
 
         preconditions, errors = get_errors(
