@@ -10,7 +10,7 @@ authors = [
 ]
 description = "Verification that attendances comply with german rules. Also provide an integration to the api of FactorialHR"
 readme = "README.md"
-requires-python = ">=3.11, <3.12"
+requires-python = ">=3.11, <3.14"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: GNU Affero General Public License v3",
@@ -21,6 +21,8 @@ classifiers = [
     "Topic :: Office/Business",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
 ]
 keywords = [
     "FactorialHR",
@@ -35,51 +37,74 @@ dependencies = [
     "trio",
 ]
 
+[dependency-groups]
+dev = [
+    "pyright>=1.1.396",
+    "pytest>=8.3.5",
+    "ruff>=0.9.10",
+]
+
 [project.scripts]
 factorial-working-time = "fwtv.main:main"
 
 [project.urls]
 "Homepage" = "https://github.com/leon1995/fwtv"
 "Bug Tracker" = "https://github.com/leon1995/fwtv/issues"
-[project.optional-dependencies]
-test = [
-    "pytest",
-]
-lint = [
-    'black',
-    'flake8',
-    'mypy',
-    'types-tabulate',
-    'isort'
-]
-dev = ["fwtv[test,lint]"]
-
-[tool.hatch.build.targets.sdist]
-include = [
-    "src/fwtv/**/*.py",
-    "README.md",
-    "pyproject.toml",
-    "CHANGELOG.md"
-]
-support-legacy = false
-
-[tool.hatch.build.targets.wheel]
-packages = ["src/fwtv"]
+"Changelog" = "https://github.com/leon1995/fwtv/blob/main/CHANGELOG.md"
+"Repository" = "https://github.com/leon1995/fwtv.git"
 
 [tool.hatch.version]
 path = "src/fwtv/__init__.py"
 
+[tool.ruff]
+lint.select = ["ALL"]  # https://docs.astral.sh/ruff/settings/#select
+lint.extend-ignore = [# https://docs.astral.sh/ruff/settings/#extend-ignore
+    "COM812", # https://docs.astral.sh/ruff/rules/missing-trailing-comma/
+    "D107", # https://docs.astral.sh/ruff/rules/undocumented-public-init/
+    "D203", # https://docs.astral.sh/ruff/rules/incorrect-blank-line-before-class/
+    "D213", # https://docs.astral.sh/ruff/rules/multi-line-summary-second-line/
+    "S101", # https://docs.astral.sh/ruff/rules/assert/
+    "S311", # https://docs.astral.sh/ruff/rules/suspicious-non-cryptographic-random-usage/
+]
+
 [tool.pytest.ini_options]
 testpaths = "tests/"
 
-[tool.black]
-line-length = 120
 
-[tool.isort]
-force_single_line = "1"
-known_localfolder = "fwtv"
-force_alphabetical_sort_within_sections = "1"
-profile = "black"
+line-length = 120  # https://docs.astral.sh/ruff/settings/#line-length
+# Allow imports relative to the "src" and "test" directories.
+src = ["src", "tests"]  # https://docs.astral.sh/ruff/settings/#src
 
-[tool.mypy]
-ignore_missing_imports = true
+[tool.ruff.format]
+quote-style = "single"
+
+[tool.ruff.lint.flake8-quotes]
+inline-quotes = "single"
+
+[tool.ruff.lint.flake8-annotations]
+allow-star-arg-any = true # https://docs.astral.sh/ruff/settings/#allow-star-arg-any
+suppress-none-returning = true # https://docs.astral.sh/ruff/settings/#suppress-none-returning
+
+[tool.ruff.lint.flake8-comprehensions]
+allow-dict-calls-with-keyword-arguments = true  # https://docs.astral.sh/ruff/settings/#allow-dict-calls-with-keyword-arguments
+
+[tool.ruff.lint.pycodestyle]
+max-doc-length = 120 # https://docs.astral.sh/ruff/settings/#max-doc-length
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["D104"]
+
+[tool.tox]  # https://github.com/tox-dev/tox-uv
+env_list = ["pre-commit", "py311", "py312", "py313"]
+
+[tool.tox.env_run_base]
+depends = ["pre-commit"]
+package = "editable"
+commands = [["pytest"]]
+dependency_groups = ["test"]
+
+[tool.tox.env.pre-commit]
+commands = [["pre-commit", "run", "--all-files"]]
+depends = []
+allowlist_externals = ["pre-commit"]
+package = "skip"
