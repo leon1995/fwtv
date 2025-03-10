@@ -1,6 +1,7 @@
+"""Contains logic for attendance verification."""
+
 import dataclasses
 import datetime
-import typing
 
 HOURS_6 = datetime.timedelta(hours=6)
 HOURS_9 = datetime.timedelta(hours=9)
@@ -11,52 +12,48 @@ MINUTES_45 = datetime.timedelta(minutes=45)
 
 @dataclasses.dataclass(frozen=True)
 class Attendance:
-    """
-    A timespan relevant for verification.
-    """
+    """A timespan relevant for verification."""
 
     clock_in: datetime.datetime
     clock_out: datetime.datetime
 
-    def __post_init__(self):
+    def __post_init__(self):  # noqa: D105
         if self.clock_out <= self.clock_in:
-            raise ValueError(f"Clocked out earlier or at the same time as clocked in for attendance {self}")
+            msg = f'Clocked out earlier or at the same time as clocked in for attendance {self}'
+            raise ValueError(msg)
 
     def __str__(self) -> str:
-        return f"{type(self).__name__}(clock_in={str(self.clock_in)}, clock_out={self.clock_out})"
+        """Format this class as string."""
+        return f'{type(self).__name__}(clock_in={self.clock_in!s}, clock_out={self.clock_out})'
 
     def __repr__(self) -> str:
+        """Get the representation."""
         return str(self)
 
 
-def calculate_time_attended(attendances: typing.List[Attendance]) -> datetime.timedelta:
-    """
-    Calculates the time attended.
+def calculate_time_attended(attendances: list[Attendance]) -> datetime.timedelta:
+    """Calculate the time attended.
 
-    @param attendances: list of attendances
-    @return: time attended
+    :param attendances: list of attendances
+    :return: time attended
     """
     attendances.sort(key=lambda x: x.clock_in)
     attended = datetime.timedelta()
     clock_out = None
-    for i, attendance in enumerate(attendances):
+    for attendance in attendances:
         # check overlaying attendances
-        if not clock_out or clock_out < attendance.clock_in:
-            clock_in = attendance.clock_in
-        else:
-            clock_in = clock_out
+        clock_in = attendance.clock_in if not clock_out or clock_out < attendance.clock_in else clock_out
         if not clock_out or clock_out < attendance.clock_out:
             clock_out = attendance.clock_out
             attended += clock_out - clock_in
     return attended
 
 
-def calculate_break_time(attendances: typing.List[Attendance]) -> datetime.timedelta:
-    """
-    Calculates the time between the specified attendances.
+def calculate_break_time(attendances: list[Attendance]) -> datetime.timedelta:
+    """Calculate the time between the specified attendances.
 
-    @param attendances: list of attendances
-    @return: time between attendances
+    :param attendances: list of attendances
+    :return: time between attendances
     """
     if not attendances:
         return datetime.timedelta(seconds=0)
@@ -69,45 +66,47 @@ def calculate_break_time(attendances: typing.List[Attendance]) -> datetime.timed
 
 @dataclasses.dataclass(frozen=True)
 class Error:
-    """
-    Error found during verification.
-    """
+    """Error found during verification."""
 
     reason: str
-    attendances: typing.List[Attendance]
+    attendances: list[Attendance]
 
     @property
-    def days_affected(self) -> typing.Set[datetime.date]:
-        days: typing.Set[datetime.date] = set()
+    def days_affected(self) -> set[datetime.date]:
+        """Get the days affected."""
+        days: set[datetime.date] = set()
         for attendance in self.attendances:
             days = days.union({attendance.clock_in.date(), attendance.clock_out.date()})
         return days
 
     @property
     def break_time(self) -> datetime.timedelta:
+        """Get the break time."""
         return calculate_break_time(self.attendances)
 
     @property
     def time_attended(self) -> datetime.timedelta:
+        """Get the time attended."""
         return calculate_time_attended(self.attendances)
 
 
-def verify_attendances(attendances: typing.List[Attendance]) -> typing.List[Error]:
-    """
-    Verifies that the specified attendances meet the following requirements (in order):
+def verify_attendances(attendances: list[Attendance]) -> list[Error]:
+    """Verify that the specified attendances meet the requirements (in order).
+
+    Requirements:
       1. It shall not be allowed to attend for more than 10 hours without not attended for at least 11 hours
       2. It shall not be allowed to attend for more than 9 hours without not attended for at least 45 minutes
       3. It shall not be allowed to attend for more than 6 hours without not attended for at least 30 minutes
 
-    @param attendances: attendances to be verified
-    @return: a list of errors found during verification
+    :param attendances: attendances to be verified
+    :return: a list of errors found during verification
     """
-    errors: typing.List[Error] = []
+    errors: list[Error] = []
     attendances.sort(key=lambda x: (x.clock_out, x.clock_out))  # ensure correct order
     # contains all attendances currently in verification
     # will be reset once a break of 11 hours has been reached
-    current_attendances: typing.List[Attendance] = []
-    for i, attendance in enumerate(attendances):
+    current_attendances: list[Attendance] = []
+    for attendance in attendances:
         current_attendances.sort(key=lambda x: x.clock_out)
         if current_attendances and attendance.clock_in > current_attendances[-1].clock_out:
             break_time = attendance.clock_in - current_attendances[-1].clock_out
@@ -124,11 +123,11 @@ def verify_attendances(attendances: typing.List[Attendance]) -> typing.List[Erro
         reason = None
         reset = False
         if cumulated_time_attended > HOURS_6 and cumulated_break_time < MINUTES_30:
-            reason = "Attended more than 6 hours without a cumulated break of 30 min"
+            reason = 'Attended more than 6 hours without a cumulated break of 30 min'
         if cumulated_time_attended > HOURS_9 and cumulated_break_time < MINUTES_45:
-            reason = "Attended more than 9 hours without a cumulated break of 45 min"
+            reason = 'Attended more than 9 hours without a cumulated break of 45 min'
         if cumulated_time_attended > HOURS_10:
-            reason = "Attended more than 10 hours without a single break of 11 hours"
+            reason = 'Attended more than 10 hours without a single break of 11 hours'
             reset = True
         if reason:
             errors.append(Error(reason=reason, attendances=current_attendances[:]))

@@ -1,13 +1,14 @@
+"""Module for working time widgets."""
+
 import collections
 import datetime
+import typing
 
 from factorialhr import models
-from PySide6.QtWidgets import QVBoxLayout
-from PySide6.QtWidgets import QWidget
+from PySide6.QtWidgets import QVBoxLayout, QWidget
 
 from fwtv import verifier
-from fwtv.widgets import settings_widget
-from fwtv.widgets import table_widget
+from fwtv.widgets import settings_widget, table_widget
 
 
 def get_errors(
@@ -17,6 +18,7 @@ def get_errors(
     employees: list[models.Employee],
     tolerance: int,
 ) -> tuple[dict[str, list[str]], dict[str, list[verifier.Error]]]:
+    """Get all errors found."""
     preconditions: dict[str, list[str]] = collections.defaultdict(list)
     employee_errors: dict[str, list[verifier.Error]] = collections.defaultdict(list)
     for employee in employees:
@@ -38,7 +40,8 @@ def get_errors(
             try:
                 # automated time tracking is not precise enough and also is not able to handle seconds precise enough
                 a = verifier.Attendance(
-                    clock_in=clock_in.replace(second=0), clock_out=attendance.clock_out.replace(second=0)
+                    clock_in=clock_in.replace(second=0),
+                    clock_out=attendance.clock_out.replace(second=0),
                 )
                 employee_attendances.append(a)
             except ValueError as e:
@@ -60,7 +63,9 @@ def get_errors(
 
 
 class WorkingTimeWidget(QWidget):
-    def __init__(self, *args, **kwargs):
+    """Widget to display working times."""
+
+    def __init__(self, *args: typing.Any, **kwargs: typing.Any):
         super().__init__(*args, **kwargs)
         self.teams = []
         self.attendances = []
@@ -87,8 +92,12 @@ class WorkingTimeWidget(QWidget):
         self.update_data()
 
     def set_data(
-        self, teams: list[models.Team], attendances: list[models.Attendance], employees: list[models.Employee]
+        self,
+        teams: list[models.Team],
+        attendances: list[models.Attendance],
+        employees: list[models.Employee],
     ):
+        """Fetch new data and update tables."""
         self.attendances = attendances
         self.teams = teams
         self.employees = employees
@@ -100,15 +109,16 @@ class WorkingTimeWidget(QWidget):
         self.update_data()
 
     def get_current_selection(self) -> models.Team | models.Employee | None:
+        """Get current selection of teams."""
         index = self.settings_widget.team_selector.selector.currentIndex()
         if 0 <= index < len(self.teams):
             return self.teams[index]
-        elif 0 <= (index := index - len(self.teams)) < len(self.employees):
+        if 0 <= (index := index - len(self.teams)) < len(self.employees):
             return self.employees[index]
-        else:
-            return None
+        return None
 
     def update_data(self):
+        """Update the data and populate new data into tables."""
         selection = self.get_current_selection()
         employees = []
         if isinstance(selection, models.Team):
@@ -117,14 +127,20 @@ class WorkingTimeWidget(QWidget):
             employees = [selection]
 
         preconditions, errors = get_errors(
-            self.settings_widget.start_picker.date.date().toPython(),
-            self.settings_widget.end_picker.date.date().toPython(),
+            typing.cast(
+                datetime.date,
+                self.settings_widget.start_picker.date.date().toPython(),
+            ),
+            typing.cast(
+                datetime.date,
+                self.settings_widget.end_picker.date.date().toPython(),
+            ),
             self.attendances,
             employees,
             self.settings_widget.tolerance_selector.value(),
         )
         entries = collections.defaultdict(list)
-        for k in preconditions.keys():
+        for k in preconditions:
             entries[k] = [preconditions[k]]
         self.preconditions_table.set_data(entries)
         self.failures_table.set_data(errors)
