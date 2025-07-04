@@ -311,5 +311,5 @@ def test_error_break_time(attendances: list[verifier.Attendance], expected: date
 )
 def test_verify_work_time(attendances: list[verifier.Attendance], error_count: int):
     """Verify found error count."""
-    errors = verifier.verify_attendances(attendances)
+    errors = verifier.verify_attendances(attendances, tolerance=datetime.timedelta())
     assert len(errors) == error_count
