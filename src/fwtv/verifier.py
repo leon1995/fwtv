@@ -90,7 +90,7 @@ class Error:
         return calculate_time_attended(self.attendances)
 
 
-def verify_attendances(attendances: list[Attendance]) -> list[Error]:
+def verify_attendances(attendances: list[Attendance], tolerance: datetime.timedelta) -> list[Error]:
     """Verify that the specified attendances meet the requirements (in order).
 
     Requirements:
@@ -99,6 +99,7 @@ def verify_attendances(attendances: list[Attendance]) -> list[Error]:
       3. It shall not be allowed to attend for more than 6 hours without not attended for at least 30 minutes
 
     :param attendances: attendances to be verified
+    :param tolerance: adjustable tolerance which is added to the limits
     :return: a list of errors found during verification
     """
     errors: list[Error] = []
@@ -122,11 +123,11 @@ def verify_attendances(attendances: list[Attendance]) -> list[Error]:
         cumulated_break_time = calculate_break_time(current_attendances)
         reason = None
         reset = False
-        if cumulated_time_attended > HOURS_6 and cumulated_break_time < MINUTES_30:
+        if cumulated_time_attended > HOURS_6 + tolerance and cumulated_break_time < MINUTES_30:
             reason = 'Attended more than 6 hours without a cumulated break of 30 min'
-        if cumulated_time_attended > HOURS_9 and cumulated_break_time < MINUTES_45:
+        if cumulated_time_attended > HOURS_9 + tolerance and cumulated_break_time < MINUTES_45:
             reason = 'Attended more than 9 hours without a cumulated break of 45 min'
-        if cumulated_time_attended > HOURS_10:
+        if cumulated_time_attended > HOURS_10 + tolerance:
             reason = 'Attended more than 10 hours without a single break of 11 hours'
             reset = True
         if reason:

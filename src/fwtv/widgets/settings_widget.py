@@ -57,7 +57,7 @@ class IntegerPickerWidget(QWidget):
         self.label = QLabel(label, self)
         self.qh.addWidget(self.label)
 
-        self.picker = QDoubleSpinBox(self)
+        self.picker = QDoubleSpinBox(self, maximum=999)  # allow maximum of 9-digit number
         self.picker.setSingleStep(1)
         self.picker.setDecimals(0)
         self.picker.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)

@@ -48,15 +48,7 @@ def get_errors(
                 preconditions[name].append(str(e))
                 continue
 
-        errors = verifier.verify_attendances(employee_attendances)
-        # ignore all errors where the time attended is the tolerance above the limit, as factorial's automated time
-        # tracking is not precises enough
-        errors = [
-            e
-            for e in errors
-            if e.time_attended > datetime.timedelta(hours=6, minutes=tolerance)
-            and e.time_attended > datetime.timedelta(hours=9, minutes=tolerance)
-        ]
+        errors = verifier.verify_attendances(employee_attendances, datetime.timedelta(minutes=tolerance))
         if errors:
             employee_errors[name] = errors
     return preconditions, employee_errors
