@@ -6,10 +6,9 @@ This script verifies attendances whether they comply with german law. In particu
 - Whether the work time is longer than 6 hours without a break of 30 min
 - Whether the work time is longer than 9 hours without a break of 45 min
 - Whether the work time is longer than 10 hours without a break of 11 hours
+- Whether the work time is within the time of 6am and 10pm
 
-It also provides a way to fetch the attendances of all employees from [FactorialHR](https://apidoc.factorialhr.com/docs) using a [company api-key](https://help.factorialhr.com/how-to-create-api-keys-in-factorial).
-
-![main_window](./docs/images/main_window.png "Main Window")
+![main_window](./docs/images/working_time_verification.png "Main Window")
 
 ## Disclaimer
 
@@ -19,12 +18,9 @@ Errors where the time attended is 1 min above the limit are ignored, because fac
 
 ## Usage
 
-- Install the tool with `pip install fwtv`
-- Run tool with `factorial-working-time`
-
-### Preconditions
-
-Preconditions errors are syntactical errors like an attendance that starts and end and the same time, or if a `clock_in` or `clock_out` parameter is missing.
+- clone this repository
+- install dependencies using `uv sync --frozen`
+- run app `uv run reflex run --env prod`
 
 ## Contributing
 
