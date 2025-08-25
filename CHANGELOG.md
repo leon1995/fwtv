@@ -3,6 +3,12 @@ All notable changes to fwtv module will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0)
 
+## [Unreleased]
+
+## [v3.0.0] -
+
+### Changed app to run in the browser using reflex
+
 ## [2.4.1] - 2025-07-07
 
 ### Fixed
