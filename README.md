@@ -20,6 +20,7 @@ Errors where the time attended is 1 min above the limit are ignored, because fac
 
 - clone this repository
 - install dependencies using `uv sync --frozen`
+- copy [`.env.sample`](.env.sample) to `.env` and adjust the environment variables
 - run app `uv run reflex run --env prod`
 
 ## Contributing

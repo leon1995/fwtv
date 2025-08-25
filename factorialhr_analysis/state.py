@@ -52,8 +52,10 @@ class LoginState(rx.State):
     )
     redirect_to: str = ''
 
-    def get_auth(self) -> factorialhr.AccessTokenAuth:
+    def get_auth(self) -> factorialhr.AccessTokenAuth | factorialhr.ApiKeyAuth:
         """Get the authentication object for the API session."""
+        if api_token := os.environ.get('FACTORIALHR_API_KEY'):
+            return factorialhr.ApiKeyAuth(api_key=api_token)
         api_session = self.api_session()
         if api_session is None:
             msg = 'api_session_cookie must be valid'
@@ -108,8 +110,8 @@ class LoginState(rx.State):
     @rx.var(cache=False)
     async def is_authenticated(self) -> bool:
         """Check if the user is authenticated."""
-        if not self.is_hydrated:
-            return False
+        if os.environ.get('FACTORIALHR_API_KEY'):
+            return True  # If using API key, always authenticated
         api_session = self.api_session()
         if api_session is None:
             return False
@@ -135,7 +137,6 @@ class LoginState(rx.State):
     @rx.event
     async def redir(self):
         """Redirect to the redirect_to route if logged in, or to the login page if not."""
-        logger.info('Redirecting...')
         if not self.is_hydrated:
             yield self.redir()
         page = self.router.url.path
