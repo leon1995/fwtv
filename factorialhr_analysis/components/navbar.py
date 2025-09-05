@@ -3,7 +3,7 @@
 import reflex as rx
 from reflex.style import color_mode, set_color_mode
 
-from factorialhr_analysis import routes, state
+from factorialhr_analysis import routes, states
 
 
 def dark_mode_toggle() -> rx.Component:
@@ -54,7 +54,11 @@ def navbar() -> rx.Component:
                         ),
                         rx.menu.content(
                             rx.menu.item(
-                                rx.link(rx.text('Log out'), href=routes.INDEX, on_click=state.LoginState.logout)
+                                rx.link(
+                                    rx.text('Log out'),
+                                    href=routes.INDEX,
+                                    on_click=states.OAuthSessionState.delete_session,
+                                )
                             ),
                         ),
                         justify='end',

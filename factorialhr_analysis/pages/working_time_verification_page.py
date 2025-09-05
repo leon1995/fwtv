@@ -14,7 +14,7 @@ import factorialhr
 import reflex as rx
 from reflex.utils.prerequisites import get_app
 
-from factorialhr_analysis import state, templates, working_time_verification
+from factorialhr_analysis import templates, working_time_verification, components, states
 
 
 def time_to_moment(time_: datetime.time | None) -> rx.MomentDelta:
@@ -136,7 +136,7 @@ class DataState(rx.State):
 
         try:
             async with self:
-                api_session = (await self.get_state(state.LoginState)).get_auth()
+                api_session = (await self.get_state(states.OAuthSessionState)).get_auth()
             # API calls outside async with block
             async with factorialhr.ApiClient(os.environ['FACTORIALHR_ENVIRONMENT_URL'], auth=api_session) as client:
                 employees = await factorialhr.EmployeesEndpoint(client).all()
@@ -466,9 +466,9 @@ def live_progress() -> rx.Component:
     )
 
 
+@components.requires_authentication
 @templates.template
-@state.redirect_for_login
-def index_page() -> rx.Component:
+def working_time_verification_page() -> rx.Component:
     """Index page of the app."""
     return rx.vstack(
         rx.hstack(render_input(), render_export_buttons(), render_filters(), justify='between', width='100%'),

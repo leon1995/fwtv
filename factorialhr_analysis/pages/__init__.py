@@ -1,4 +1,5 @@
-from factorialhr_analysis.pages.index import index_page
-from factorialhr_analysis.pages.login import login_page
+from factorialhr_analysis.pages.working_time_verification_page import working_time_verification_page
+from factorialhr_analysis.pages.oauth_page import authorize_oauth_page, start_oauth_process
+from factorialhr_analysis.pages.index_page import index_page
 
-__all__ = ['index_page', 'login_page']
+__all__ = ['working_time_verification_page', 'authorize_oauth_page', 'start_oauth_process', 'index_page']
