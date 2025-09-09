@@ -1,4 +1,3 @@
-import logging
 import time
 import typing
 
@@ -6,6 +5,7 @@ import factorialhr
 import httpx
 import pydantic
 import reflex as rx
+
 from factorialhr_analysis import constants, routes
 
 

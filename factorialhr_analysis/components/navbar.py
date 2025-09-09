@@ -10,20 +10,18 @@ def dark_mode_toggle() -> rx.Component:
     """Toggle for dark/light mode."""
     return rx.segmented_control.root(
         rx.segmented_control.item(
-            rx.icon(tag='monitor', size=20),
+            rx.icon(tag='monitor'),
             value='system',
         ),
         rx.segmented_control.item(
-            rx.icon(tag='sun', size=20),
+            rx.icon(tag='sun'),
             value='light',
         ),
         rx.segmented_control.item(
-            rx.icon(tag='moon', size=20),
+            rx.icon(tag='moon'),
             value='dark',
         ),
         on_change=set_color_mode,
-        variant='classic',
-        radius='large',
         value=color_mode,
     )
 
@@ -33,37 +31,66 @@ def navbar_link(text: str, url: str) -> rx.Component:
     return rx.link(rx.text(text, size='4', weight='medium'), href=url)
 
 
+def refresh_data():
+    return rx.hstack(
+        rx.button(
+            rx.icon('refresh-ccw'),
+            on_click=states.DataState.refresh_data,
+            loading=states.DataState.is_loading,
+        ),
+        rx.text(
+            'Last data update: ',
+            rx.cond(
+                states.DataState.last_updated.is_not_none(),
+                rx.moment(states.DataState.last_updated, from_now=True),
+                'Never',
+            ),
+        ),
+        align='center',
+    )
+
+
+def icon_menu():
+    return (
+        rx.menu.root(
+            rx.menu.trigger(
+                rx.icon_button(
+                    rx.icon('user'),
+                    size='2',
+                    radius='full',
+                )
+            ),
+            rx.menu.content(
+                rx.menu.item(
+                    rx.link(
+                        rx.text('Log out'),
+                        href=routes.INDEX,
+                        on_click=states.OAuthSessionState.delete_session,
+                    )
+                ),
+            ),
+            justify='end',
+        ),
+    )
+
+
 def navbar() -> rx.Component:
     """Navigation bar component."""
     return rx.box(
         rx.desktop_only(
             rx.hstack(
-                rx.heading('Factorialhr analysis', size='7', weight='bold'),
                 rx.hstack(
-                    navbar_link('Working time verification', '/#'),
-                    spacing='5',
+                    rx.link(rx.heading('Working time analysis', size='5', weight='bold'), href=routes.INDEX),
+                    navbar_link('Verification', '/verification'),
+                    navbar_link('Projects', '/projects'),
+                    align_items='center',
                 ),
                 rx.hstack(
-                    rx.menu.root(
-                        rx.menu.trigger(
-                            rx.icon_button(
-                                rx.icon('user'),
-                                size='2',
-                                radius='full',
-                            )
-                        ),
-                        rx.menu.content(
-                            rx.menu.item(
-                                rx.link(
-                                    rx.text('Log out'),
-                                    href=routes.INDEX,
-                                    on_click=states.OAuthSessionState.delete_session,
-                                )
-                            ),
-                        ),
-                        justify='end',
-                    ),
+                    refresh_data(),
+                    rx.spacer(),
+                    icon_menu(),
                     dark_mode_toggle(),
+                    justify='between',
                 ),
                 justify='between',
                 align_items='center',
@@ -71,5 +98,5 @@ def navbar() -> rx.Component:
         ),
         bg=rx.color('accent', 3),
         padding='1em',
-        width='100%',
+        top='0',
     )

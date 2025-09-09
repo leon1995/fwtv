@@ -141,6 +141,7 @@ dependencies = [
     { name = "dotenv" },
     { name = "factorialhr" },
     { name = "httpx" },
+    { name = "redis" },
     { name = "reflex" },
 ]
 
@@ -163,7 +164,8 @@ requires-dist = [
     { name = "dotenv", specifier = ">=0.9.9" },
     { name = "factorialhr", specifier = ">=4.1.0" },
     { name = "httpx", specifier = ">=0.28.1" },
-    { name = "reflex", specifier = "==0.8.7" },
+    { name = "redis", specifier = ">=6.4.0" },
+    { name = "reflex", specifier = "==0.8.9" },
 ]
 
 [package.metadata.requires-dev]
@@ -557,14 +559,13 @@ wheels = [
 
 [[package]]
 name = "reflex"
-version = "0.8.7"
+version = "0.8.9"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "alembic" },
     { name = "click" },
     { name = "granian", extra = ["reload"] },
     { name = "httpx" },
-    { name = "jinja2" },
     { name = "packaging" },
     { name = "platformdirs" },
     { name = "psutil", marker = "sys_platform == 'win32'" },
@@ -579,9 +580,9 @@ dependencies = [
     { name = "typing-extensions" },
     { name = "wrapt" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/e9/3a/d9b54b0f5021ec99f28af5753275fc279d43b43b30fa5f7d71ecc3d3f80c/reflex-0.8.7.tar.gz", hash = "sha256:42af70890ea817e520e3c7a5dd0d94a56d43e393ff777dbec4253bc0b6bcac1c", size = 587068, upload-time = "2025-08-18T19:37:21.705Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/60/61/5a9dc5a79f919e9a8b75e1d09f80f848469d6a723f2e8555dfc82e9ca500/reflex-0.8.9.tar.gz", hash = "sha256:c9c7c4d23770269e7e2ca04e19d106ffe6d0e5dacc5dc0b5f830958f5b79687e", size = 597102, upload-time = "2025-09-02T20:30:56.563Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/04/14/b25f38370d96017ed02e5548012d898166d7e8da7bc0ee63bee04da2faea/reflex-0.8.7-py3-none-any.whl", hash = "sha256:ac0e3b56ec11a5d97d2cdec1c8aa2aaee501597a02a12381d62a2918ce6783a1", size = 883153, upload-time = "2025-08-18T19:37:19.433Z" },
+    { url = "https://files.pythonhosted.org/packages/18/2c/5f62538dfe482c0847585d71adcccc17d3ab0b2b79b47cb11b58214b8c9d/reflex-0.8.9-py3-none-any.whl", hash = "sha256:244b06078acf60d81515e89835eba9d25f981bd4bd4537fcbca18aac1b0c6135", size = 885247, upload-time = "2025-09-02T20:30:54.683Z" },
 ]
 
 [[package]]

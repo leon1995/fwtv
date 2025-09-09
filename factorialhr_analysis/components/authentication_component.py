@@ -1,11 +1,12 @@
 import functools
+from collections.abc import Callable
 
 import reflex as rx
 
 from factorialhr_analysis import states
 
 
-def requires_authentication(page: rx.app.ComponentCallable) -> rx.app.ComponentCallable:
+def requires_authentication(page: Callable[[], rx.Component]) -> Callable[[], rx.Component]:
     """Require authentication before rendering a page.
 
     If the user is not authenticated, then redirect to the login page.

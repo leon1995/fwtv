@@ -1,20 +1,74 @@
 """The main page of the app."""
 
-import asyncio
-import collections
 import csv
 import datetime
 import io
-import os
 import typing
-from collections.abc import Container, Sequence
+from collections.abc import Container, Iterable, Sequence
 
 import anyio.from_thread
 import factorialhr
 import reflex as rx
 from reflex.utils.prerequisites import get_app
 
-from factorialhr_analysis import templates, working_time_verification, components, states
+from factorialhr_analysis import components, states, templates, working_time_verification
+
+
+class SettingsState(rx.State):
+    _start_date: datetime.date | None = None
+    _end_date: datetime.date | None = None
+    _tolerance: datetime.timedelta | None = None
+
+    only_active: rx.Field[bool] = rx.field(default=True)
+
+    @rx.var
+    def start_date(self) -> str:
+        """Get the start date as a string."""
+        if self._start_date is None:
+            return ''
+        return self._start_date.isoformat()
+
+    @rx.var
+    def end_date(self) -> str:
+        """Get the end date as a string."""
+        if self._end_date is None:
+            return ''
+        return self._end_date.isoformat()
+
+    @rx.var
+    def tolerance(self) -> str:
+        """Get the tolerance value."""
+        return str(int(self._tolerance.total_seconds() / 60)) if self._tolerance is not None else ''
+
+    @rx.event
+    def set_tolerance(self, value: str):
+        """Set the tolerance value."""
+        if value.isdigit():
+            self._tolerance = datetime.timedelta(minutes=int(value))
+        else:
+            self._tolerance = None
+
+    @rx.event
+    def set_start_date(self, date: str):
+        """Set the start date."""
+        self._start_date = datetime.date.fromisoformat(date)
+
+    @rx.event
+    def set_end_date(self, date: str):
+        """Set the end date."""
+        self._end_date = datetime.date.fromisoformat(date)
+
+    @rx.var
+    def date_error(self) -> bool:
+        """Check if the end date is before the start date."""
+        if not self._start_date or not self._end_date:
+            return False
+        return self._end_date < self._start_date
+
+    @rx.event
+    def set_only_active(self, active: bool):  # noqa: FBT001
+        """Set whether to only include active employees."""
+        self.only_active = active
 
 
 def time_to_moment(time_: datetime.time | None) -> rx.MomentDelta:
@@ -37,6 +91,7 @@ class ErrorToShow(typing.TypedDict):
     """TypedDict for errors to show."""
 
     name: str
+    team_names: Iterable[str]
     affected_days: str
     error: str
     cumulated_break: datetime.timedelta
@@ -45,171 +100,121 @@ class ErrorToShow(typing.TypedDict):
     attendances: Sequence[Attendance]
 
 
-class DataState(rx.State):
+def _filter_error(filter_value: str, error: ErrorToShow) -> bool:
+    return filter_value in error['name'].lower() or any(
+        filter_value in team_name.lower() for team_name in error['team_names']
+    )
+
+
+class DataStateDeprecated(rx.State):
     """State holding all the data."""
 
-    _shifts: collections.defaultdict[int, list[factorialhr.AttendanceShift]] = collections.defaultdict(  # noqa: RUF012
-        list
-    )  # employee id as key
-    _employees: list[factorialhr.Employee] = []  # noqa: RUF012
-    _employee_team_name_mapping: dict[int, list[str]] = {}  # noqa: RUF012
-    calculated_errors: list[working_time_verification.Error] = []  # noqa: RUF012
-    errors_to_show: list[ErrorToShow] = []  # noqa: RUF012
-    start_date: str = ''
-    end_date: str = ''
-    is_loading: bool = False  # Guard flag
-    tolerance: str = ''
-    processed_employees: int = 0  # Number of employees processed so far
+    errors_to_show: rx.Field[list[ErrorToShow]] = rx.field(default_factory=list)
+    _calculated_errors: list[ErrorToShow] = []  # noqa: RUF012
+    is_loading: rx.Field[bool] = rx.field(default=False)
+    processed_employees: rx.Field[int] = rx.field(0)  # Number of employees processed so far
+    total_amount_of_employees: rx.Field[int] = rx.field(0)
 
-    filter_value: str = ''  # Placeholder for search functionality
+    filter_value: rx.Field[str] = rx.field('')  # Placeholder for search functionality
 
-    selected_error_ids: list[int] = []  # noqa: RUF012
-
-    @rx.var
-    def date_error(self) -> bool:
-        """Check if the end date is before the start date."""
-        if not self.start_date or not self.end_date:
-            return False
-        return datetime.date.fromisoformat(self.end_date) < datetime.date.fromisoformat(self.start_date)
-
-    @rx.var
-    def disable_submit(self) -> bool:
-        """Disable the submit button if there is a date error."""
-        return self.date_error or not self.start_date or not self.end_date
+    selected_error_ids: rx.Field[list[int]] = rx.field(default_factory=list)
 
     def _should_cancel(self) -> bool:
         """Check if the current session is still valid."""
         return self.router.session.client_token not in get_app().app.event_namespace.token_to_sid
 
-    def _cleanup(self):
-        """Cleanup method to reset state."""
-        self._shifts = collections.defaultdict(list)
-        self.processed_employees = 0
-        self.errors_to_show = []
-        self._employees = []
-        self._employee_team_name_mapping = {}
-        self.selected_error_ids = []
-        self.is_loading = False
-
-    @rx.var
-    def length_of_employees(self) -> int:
-        """Get the length of employees."""
-        return len(self._employees)
-
-    async def _handle_employee(
-        self, client: factorialhr.ApiClient, employee: factorialhr.Employee, teams: Sequence[factorialhr.Team]
+    async def _handle_single_employee(
+        self,
+        employee: factorialhr.Employee,
+        teams: Sequence[factorialhr.Team],
+        shifts: Sequence[factorialhr.AttendanceShift],
+        tolerance: datetime.timedelta | None,
     ):
-        """Handle fetching shifts for an employee."""
+        """Handle a single employee."""
+        for error in working_time_verification.get_error(
+            filter(lambda x: x.employee_id == employee.id, shifts), tolerance=tolerance
+        ):
+            async with self:
+                error_to_show = ErrorToShow(
+                    name=employee.full_name,
+                    team_names=[team.name for team in teams if employee.id in team.employee_ids],
+                    affected_days=', '.join(str(d) for d in error.days_affected),
+                    error=error.reason,
+                    cumulated_break=error.break_time,
+                    cumulated_attendance=error.time_attended,
+                    attendances=[
+                        Attendance(
+                            date=a.date,
+                            clock_in=time_to_moment(a.clock_in) if a.clock_in is not None else None,
+                            clock_out=time_to_moment(a.clock_out) if a.clock_out is not None else None,
+                            minutes=rx.MomentDelta(minutes=a.minutes),
+                        )
+                        for a in error.attendances
+                    ],
+                )
+                self._calculated_errors.append(error_to_show)
         async with self:
-            self._employees.append(employee)
-            self._employee_team_name_mapping[employee.id] = [
-                t.name for t in teams if t.employee_ids and employee.id in t.employee_ids
-            ]
-        shifts = await factorialhr.ShiftsEndpoint(client).all(
-            params={'start_on': self.start_date, 'end_on': self.end_date, 'employee_ids[]': [employee.id]},
-            timeout=60,
-        )
-        async with self:
-            for shift in shifts.data():
-                if self._should_cancel():
-                    self._cleanup()
-                    return
-                self._shifts[employee.id].append(shift)
+            self.processed_employees += 1
 
     @rx.event(background=True)
-    async def handle_submit(self, form_data: dict):
-        """Fetch employees and teams data."""
+    async def calculate_errors(self):
+        """Calculate errors based on the shifts."""
         async with self:
             if self.is_loading:
                 return
-
-            self.start_date = form_data.get('start_date')
-            self.end_date = form_data.get('end_date')
             self.is_loading = True
-            self._shifts = collections.defaultdict(list)
+            self.selected_error_ids.clear()
+            self.errors_to_show.clear()
+            self._calculated_errors.clear()
             self.processed_employees = 0
-            self.errors_to_show = []
-            self._employees = []
-            self._employee_team_name_mapping = {}
-            self.selected_error_ids = []
-        yield  # Send initial state update to frontend
+            data_state = await self.get_state(states.DataState)
+            settings_state = await self.get_state(SettingsState)
 
-        try:
-            async with self:
-                api_session = (await self.get_state(states.OAuthSessionState)).get_auth()
-            # API calls outside async with block
-            async with factorialhr.ApiClient(os.environ['FACTORIALHR_ENVIRONMENT_URL'], auth=api_session) as client:
-                employees = await factorialhr.EmployeesEndpoint(client).all()
-                teams = list((await factorialhr.TeamsEndpoint(client).all()).data())
-                async with anyio.from_thread.create_task_group() as tg:
-                    for employee in employees.data():
-                        tg.start_soon(self._handle_employee, client, employee, teams)
+        async with self:
+            employees = [
+                employee
+                for employee in data_state._employees.values()
+                if not settings_state.only_active or employee.active
+            ]
+            self.total_amount_of_employees = len(employees)
+            shifts = [
+                shift
+                for shift in data_state._shifts.values()
+                if settings_state._start_date <= shift.date <= settings_state._end_date
+            ]
+        async with anyio.from_thread.create_task_group() as tg:
+            for employee in employees:
+                tg.start_soon(
+                    self._handle_single_employee,
+                    employee,
+                    data_state._teams.values(),
+                    shifts,
+                    settings_state._tolerance,
+                )
 
+        if not self.filter_value:
             async with self:
-                yield DataState.fill_errors_to_show  # set is_loading to false
-
-        except asyncio.CancelledError:
-            # Handle cancellation when page is reloaded/closed
-            async with self:
-                self._cleanup()
-            raise
-        except Exception:
-            # Handle other errors
-            async with self:
-                self._cleanup()
-            raise
+                self.errors_to_show = self._calculated_errors[:]
+        else:
+            for error_to_show in self._calculated_errors:
+                if not self.filter_value or _filter_error(self.filter_value.lower(), error_to_show):
+                    async with self:
+                        self.errors_to_show.append(error_to_show)
+        async with self:
+            self.is_loading = False
 
     @rx.event
-    async def fill_errors_to_show(self):
-        """Fill the errors_to_show list based on the fetched data."""
-        self.selected_error_ids = []
-        self.errors_to_show = []
-        self.processed_employees = 0
-        self.is_loading = True
-        yield
-        tolerance = datetime.timedelta(minutes=int(self.tolerance) if self.tolerance.isdigit() else 0)
-        value = self.filter_value.lower()
-        for employee in self._employees:
-            teams = self._employee_team_name_mapping.get(employee.id, [])
-            if value in employee.full_name.lower() or any(value in team.lower() for team in teams):
-                for error in working_time_verification.get_error(self._shifts[employee.id], tolerance=tolerance):
-                    if self._should_cancel():
-                        self._cleanup()
-                        return
-                    self.errors_to_show.append(
-                        ErrorToShow(
-                            name=employee.full_name,
-                            affected_days=', '.join(str(d) for d in error.days_affected),
-                            error=error.reason,
-                            cumulated_break=error.break_time,
-                            cumulated_attendance=error.time_attended,
-                            attendances=[
-                                Attendance(
-                                    date=a.date,
-                                    clock_in=time_to_moment(a.clock_in) if a.clock_in is not None else None,
-                                    clock_out=time_to_moment(a.clock_out) if a.clock_out is not None else None,
-                                    minutes=rx.MomentDelta(minutes=a.minutes),
-                                )
-                                for a in error.attendances
-                            ],
-                        )
-                    )
-                    yield
-            self.processed_employees += 1
-        self.is_loading = False
-
-    @rx.event
-    def filter_employees(self, value: str):
+    def set_filter_value(self, value: str):
         """Filter employees based on the search value."""
         self.filter_value = value
-        yield DataState.fill_errors_to_show
-
-    @rx.event
-    def set_tolerance(self, value: str):
-        """Set the tolerance value."""
-        if value == '' or value.isdigit():
-            self.tolerance = value
-        yield DataState.fill_errors_to_show
+        self.errors_to_show.clear()
+        if not value:
+            self.errors_to_show = self._calculated_errors[:]
+            return
+        for error in self._calculated_errors:
+            if _filter_error(value.lower(), error):
+                self.errors_to_show.append(error)
+            yield
 
     @rx.event
     def select_row(self, index: int):
@@ -267,37 +272,67 @@ class DataState(rx.State):
 
 def render_input() -> rx.Component:
     """Render the date input form."""
-    return rx.form(
-        rx.hstack(
+    return rx.hstack(
+        rx.hstack(  # Group "Start date" and its input
             rx.text('Start date'),
             rx.input(
                 type='date',
                 name='start_date',
-                value=DataState.start_date,
-                on_change=DataState.set_start_date,
+                value=SettingsState.start_date,
+                on_change=SettingsState.set_start_date,
             ),
+            align='center',
+            spacing='1',
+            min_width='max-content',
+        ),
+        rx.hstack(  # Group "End date" and its input
             rx.text('End date'),
             rx.input(
                 type='date',
                 name='end_date',
-                value=DataState.end_date,
-                on_change=DataState.set_end_date,
+                value=SettingsState.end_date,
+                on_change=SettingsState.set_end_date,
+            ),
+            align='center',
+            spacing='1',
+            min_width='max-content',
+        ),
+        rx.hstack(
+            rx.text('Only active'),
+            rx.checkbox(default_checked=SettingsState.only_active, on_change=SettingsState.set_only_active),
+            align='center',
+            min_width='max-content',
+            spacing='1',
+        ),
+        rx.hstack(
+            rx.text('Tolerance'),
+            rx.input(
+                placeholder='Minutes',
+                type='number',
+                value=SettingsState.tolerance,
+                on_change=SettingsState.set_tolerance,
+                width='100%',
+                regex=r'^\d*$',
+                min=0,
+            ),
+            align='center',
+            spacing='1',
+            min_width='max-content',
+        ),
+        rx.cond(
+            SettingsState.date_error,
+            rx.tooltip(
+                rx.button('Submit', disabled=True),
+                content='End date must be after start date.',
             ),
             rx.button(
                 'Submit',
-                type='submit',
-                loading=DataState.is_loading,
-                disabled=DataState.disable_submit,
+                loading=DataStateDeprecated.is_loading,
+                on_click=DataStateDeprecated.calculate_errors,
             ),
-            rx.cond(
-                DataState.date_error,
-                rx.text('End date must be after start date', color='red'),
-            ),
-            spacing='3',
-            align='center',
-            width='100%',
         ),
-        on_submit=DataState.handle_submit,
+        spacing='3',
+        align='center',
         width='100%',
     )
 
@@ -307,11 +342,13 @@ def render_export_buttons() -> rx.Component:
     return rx.hstack(
         rx.button(
             'Export Selected',
-            disabled=DataState.selected_error_ids.length() == 0,
-            on_click=DataState.download_selected_errors,
+            disabled=DataStateDeprecated.selected_error_ids.length() == 0,
+            on_click=DataStateDeprecated.download_selected_errors,
         ),
         rx.button(
-            'Export All', disabled=DataState.errors_to_show.length() == 0, on_click=DataState.download_all_errors
+            'Export All',
+            disabled=DataStateDeprecated.errors_to_show.length() == 0,
+            on_click=DataStateDeprecated.download_all_errors,
         ),
         justify='center',
         align='center',
@@ -324,42 +361,14 @@ def render_search() -> rx.Component:
     return rx.hstack(
         rx.text('Search'),
         rx.input(
-            value=DataState.filter_value,
-            on_change=DataState.filter_employees,
+            value=DataStateDeprecated.filter_value,
+            on_change=DataStateDeprecated.set_filter_value,
             width='100%',
             placeholder='Filter by name or team',
+            disabled=DataStateDeprecated.is_loading,
         ),
         width='50%',
         align='center',
-    )
-
-
-def render_tolerance_input() -> rx.Component:
-    """Render the tolerance input."""
-    return rx.hstack(
-        rx.text('Tolerance'),
-        rx.input(
-            placeholder='Minutes',
-            type='number',
-            value=DataState.tolerance,
-            on_change=DataState.set_tolerance,
-            width='100%',
-            regex=r'^\d*$',
-            min=0,
-        ),
-        width='25%',
-        align='center',
-    )
-
-
-def render_filters() -> rx.Component:
-    """Render the filters section."""
-    return rx.hstack(
-        render_tolerance_input(),
-        render_search(),
-        width='100%',
-        align='center',
-        justify='end',
     )
 
 
@@ -429,8 +438,10 @@ def show_employee(error: rx.Var[ErrorToShow], index: int) -> rx.Component:
             ),
             align='right',
         ),
-        on_click=lambda: DataState.select_row(index),
-        background_color=rx.cond(DataState.selected_error_ids.contains(index), rx.color('blue', 3), 'transparent'),
+        on_click=lambda: DataStateDeprecated.select_row(index),
+        background_color=rx.cond(
+            DataStateDeprecated.selected_error_ids.contains(index), rx.color('blue', 3), 'transparent'
+        ),
     )
 
 
@@ -449,7 +460,7 @@ def render_table() -> rx.Component:
         ),
         rx.table.body(
             rx.foreach(
-                DataState.errors_to_show,
+                DataStateDeprecated.errors_to_show,
                 show_employee,
             )
         ),
@@ -460,9 +471,12 @@ def render_table() -> rx.Component:
 def live_progress() -> rx.Component:
     """Show a live progress bar when loading data."""
     return rx.cond(
-        ~DataState.is_loading,
+        ~DataStateDeprecated.is_loading,
         rx.fragment(),
-        rx.progress(value=DataState.processed_employees, max=DataState.length_of_employees),
+        rx.progress(
+            value=DataStateDeprecated.processed_employees,
+            max=DataStateDeprecated.total_amount_of_employees,
+        ),
     )
 
 
@@ -471,7 +485,7 @@ def live_progress() -> rx.Component:
 def working_time_verification_page() -> rx.Component:
     """Index page of the app."""
     return rx.vstack(
-        rx.hstack(render_input(), render_export_buttons(), render_filters(), justify='between', width='100%'),
+        rx.hstack(render_input(), render_export_buttons(), render_search(), justify='between', width='100%'),
         live_progress(),
         render_table(),
         width='100%',

@@ -1,10 +1,12 @@
 import functools
-import logging
 import secrets
 import urllib.parse
+from collections.abc import Callable
+
 import httpx
 import reflex as rx
-from factorialhr_analysis import states, constants
+
+from factorialhr_analysis import constants, states
 
 
 class OAuthProcessState(rx.State):
@@ -50,7 +52,7 @@ class OAuthProcessState(rx.State):
             self.expected_state = ''
 
 
-def redirect_if_authenticated(page: rx.app.ComponentCallable) -> rx.app.ComponentCallable:
+def redirect_if_authenticated(page: Callable[[], rx.Component]) -> Callable[[], rx.Component]:
     """Redirect authenticated users away from login page."""
 
     @functools.wraps(page)

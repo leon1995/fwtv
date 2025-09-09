@@ -8,4 +8,6 @@ config = rx.Config(
         rx.plugins.SitemapPlugin(),
         rx.plugins.TailwindV4Plugin(),
     ],
+    telemetry_enabled=False,
+    env_file='.env',
 )

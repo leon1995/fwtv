@@ -1,7 +1,6 @@
 import os
-import dotenv
 
-dotenv.load_dotenv()
+# dotenv.load_dotenv()
 
 CLIENT_ID: str = os.environ.get('FACTORIALHR_CLIENT_ID', '')
 CLIENT_SECRET: str = os.environ.get('FACTORIALHR_CLIENT_SECRET', '')
