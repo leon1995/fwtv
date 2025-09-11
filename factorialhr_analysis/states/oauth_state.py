@@ -41,6 +41,7 @@ class OAuthSessionState(rx.State):
         name='api_session',
         same_site='strict',
         secure=True,
+        max_age=7 * 24 * 60 * 60,
     )
     _redirect_to: str = ''
 
