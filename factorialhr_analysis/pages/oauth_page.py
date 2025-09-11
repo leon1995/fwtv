@@ -48,6 +48,8 @@ class OAuthProcessState(rx.State):
             await oauth_session.create_session(code, grant_type='authorization_code')
         except httpx.HTTPStatusError as e:
             self.error = str(e)
+        else:
+            yield states.DataState.refresh_data
         finally:
             self.expected_state = ''
 

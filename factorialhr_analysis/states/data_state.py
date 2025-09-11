@@ -45,9 +45,18 @@ class DataState(rx.State):
         async with self:
             self._credentials = next(iter(credentials.data()), None)
 
-    @rx.event(background=True)
+    @rx.event
     async def refresh_data(self):
         """Refresh the data."""
+        auth_state = await self.get_state(states.OAuthSessionState)
+        if await auth_state.refresh_session():
+            return DataState.poll_data
+        self.clear()
+        return states.OAuthSessionState.redir
+
+    @rx.event(background=True)
+    async def poll_data(self):
+        """Poll the data."""
         async with self:
             if self.is_loading:
                 return

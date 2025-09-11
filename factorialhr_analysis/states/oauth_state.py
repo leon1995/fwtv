@@ -130,7 +130,7 @@ class OAuthSessionState(rx.State):
         api_session = self.api_session()
         if api_session is None:
             msg = 'api_session_cookie must be valid'
-            raise RuntimeError(msg)
+            raise ValueError(msg)
         return factorialhr.AccessTokenAuth(
             access_token=api_session.access_token,
             token_type=api_session.token_type,

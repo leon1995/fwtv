@@ -1,0 +1,4 @@
+name: factorialhr_analysis
+regions:
+  fra: 1
+envfile: .env.production

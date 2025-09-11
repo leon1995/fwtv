@@ -6,6 +6,15 @@ from reflex.style import color_mode, set_color_mode
 from factorialhr_analysis import routes, states
 
 
+class NavbarState(rx.State):
+    """State for the navigation bar."""
+
+    @rx.event
+    async def logout(self):
+        """Log out the user."""
+        yield [states.OAuthSessionState.delete_session, states.DataState.clear, rx.redirect(routes.INDEX)]
+
+
 def dark_mode_toggle() -> rx.Component:
     """Toggle for dark/light mode."""
     return rx.segmented_control.root(
@@ -65,7 +74,7 @@ def icon_menu():
                     rx.link(
                         rx.text('Log out'),
                         href=routes.INDEX,
-                        on_click=states.OAuthSessionState.delete_session,
+                        on_click=NavbarState.logout,
                     )
                 ),
             ),

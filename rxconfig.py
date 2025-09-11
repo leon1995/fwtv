@@ -10,4 +10,5 @@ config = rx.Config(
     ],
     telemetry_enabled=False,
     env_file='.env',
+    show_built_with_reflex=False,
 )
