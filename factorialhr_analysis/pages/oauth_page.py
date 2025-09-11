@@ -1,4 +1,5 @@
 import functools
+import logging
 import secrets
 import urllib.parse
 from collections.abc import Callable
@@ -46,11 +47,14 @@ class OAuthProcessState(rx.State):
         oauth_session = await self.get_state(states.OAuthSessionState)
         try:
             await oauth_session.create_session(code, grant_type='authorization_code')
-        except httpx.HTTPStatusError as e:
+        except (httpx.RequestError, httpx.HTTPStatusError) as e:
+            logging.getLogger(__name__).exception('error creating oauth session')
             self.error = str(e)
         else:
+            logging.getLogger(__name__).info('created oauth session')
             yield states.DataState.refresh_data
         finally:
+            self.error = ''
             self.expected_state = ''
 
 

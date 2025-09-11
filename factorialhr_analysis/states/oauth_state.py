@@ -40,6 +40,7 @@ class OAuthSessionState(rx.State):
     api_session_cookie: str = rx.Cookie(
         name='api_session',
         same_site='strict',
+        secure=True,
     )
     _redirect_to: str = ''
 
@@ -94,7 +95,7 @@ class OAuthSessionState(rx.State):
         if api_session.is_access_token_expired():
             try:
                 await self.create_session(token=api_session.refresh_token, grant_type='refresh_token')
-            except httpx.HTTPStatusError:
+            except (httpx.RequestError, httpx.HTTPError):
                 return False
         return True
 

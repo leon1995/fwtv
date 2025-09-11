@@ -3,6 +3,9 @@
 import reflex as rx
 
 from factorialhr_analysis import pages, routes
+import logging
+
+logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
 # TODO: check if env variables in constants have been set
 

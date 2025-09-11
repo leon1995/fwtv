@@ -1,4 +1,5 @@
 import datetime
+import logging
 
 import anyio.abc
 import anyio.from_thread
@@ -71,11 +72,14 @@ class DataState(rx.State):
                 tg.start_soon(self._load_employees, client)
                 tg.start_soon(self._load_shifts, client)
                 tg.start_soon(self._load_credentials, client)
+        except Exception:
+            logging.getLogger(__name__).exception('error loading data')
         finally:
             async with self:
                 self.is_loading = False
         async with self:
             self.last_updated = datetime.datetime.now(tz=datetime.UTC)
+            logging.getLogger(__name__).info('data loaded')
 
     @rx.event
     def clear(self):

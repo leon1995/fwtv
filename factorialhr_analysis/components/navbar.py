@@ -46,6 +46,7 @@ def refresh_data():
             rx.icon('refresh-ccw'),
             on_click=states.DataState.refresh_data,
             loading=states.DataState.is_loading,
+            aria_label='Refresh data',
         ),
         rx.text(
             'Last data update: ',
