@@ -1,0 +1,37 @@
+services:
+  #db:
+  #  image: postgres
+  #  restart: unless-stopped
+  #  environment:
+  #    POSTGRES_PASSWORD: secret
+  #  volumes:
+  #    - postgres-data:/var/lib/postgresql/data
+
+  redis:
+    image: redis
+    restart: unless-stopped
+  app:
+    image: local/reflex-app
+    environment:
+      #REFLEX_DB_URL: postgresql+psycopg://postgres:secret@db/postgres
+      REFLEX_REDIS_URL: redis://redis:6379
+    build:
+      context: .
+    volumes:
+      - upload-data:/app/uploaded_files
+    restart: unless-stopped
+
+  webserver:
+    ports:
+      - 8080:80
+    build:
+      context: .
+      dockerfile: Caddy.Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - app
+
+volumes:
+  #postgres-data:
+  # Uploaded files
+  upload-data:

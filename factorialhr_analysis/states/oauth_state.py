@@ -55,23 +55,27 @@ class OAuthSessionState(rx.State):
             return None
 
     @rx.event
-    async def create_session(self, token: str, *, grant_type: typing.Literal['refresh_token', 'authorization_code']):
+    async def create_session(self, token: str, grant_type: typing.Literal['refresh_token', 'authorization_code']):
         """Log in to the API and store the session cookie."""
+        data = {
+            'client_id': constants.CLIENT_ID,
+            'client_secret': constants.CLIENT_SECRET,
+        }
         if grant_type == 'refresh_token':
-            data = {
-                'client_id': constants.CLIENT_ID,
-                'client_secret': constants.CLIENT_SECRET,
-                'grant_type': 'refresh_token',
-                'refresh_token': token,
-            }
+            data.update(
+                {
+                    'grant_type': 'refresh_token',
+                    'refresh_token': token,
+                }
+            )
         else:
-            data = {
-                'client_id': constants.CLIENT_ID,
-                'client_secret': constants.CLIENT_SECRET,
-                'code': token,
-                'grant_type': 'authorization_code',
-                'redirect_uri': constants.REDIRECT_URI,
-            }
+            data.update(
+                {
+                    'code': token,
+                    'grant_type': 'authorization_code',
+                    'redirect_uri': constants.REDIRECT_URI,
+                }
+            )
         async with httpx.AsyncClient() as client:
             response = await client.post(
                 f'{constants.ENVIRONMENT_URL}/oauth/token',

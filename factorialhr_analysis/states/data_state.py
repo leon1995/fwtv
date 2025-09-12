@@ -1,8 +1,9 @@
+"""State for managing data."""
+
 import datetime
 import logging
 
-import anyio.abc
-import anyio.from_thread
+import anyio
 import factorialhr
 import reflex as rx
 
@@ -47,7 +48,7 @@ class DataState(rx.State):
             self._credentials = next(iter(credentials.data()), None)
 
     @rx.event
-    async def refresh_data(self):
+    async def refresh_data(self):  # noqa: ANN201
         """Refresh the data."""
         auth_state = await self.get_state(states.OAuthSessionState)
         if await auth_state.refresh_session():
@@ -65,8 +66,8 @@ class DataState(rx.State):
             auth = (await self.get_state(states.OAuthSessionState)).get_auth()
         try:
             async with (
-                factorialhr.ApiClient(constants.ENVIRONMENT_URL, auth=auth) as client,
-                anyio.from_thread.create_task_group() as tg,
+                factorialhr.ApiClient(constants.ENVIRONMENT_URL, auth=auth) as client,  # pyright: ignore[reportArgumentType]
+                anyio.create_task_group() as tg,
             ):
                 tg.start_soon(self._load_teams, client)
                 tg.start_soon(self._load_employees, client)
@@ -74,6 +75,7 @@ class DataState(rx.State):
                 tg.start_soon(self._load_credentials, client)
         except Exception:
             logging.getLogger(__name__).exception('error loading data')
+            raise
         finally:
             async with self:
                 self.is_loading = False
@@ -83,7 +85,9 @@ class DataState(rx.State):
 
     @rx.event
     def clear(self):
+        """Clear the data."""
         self.last_updated = None
         self._employees.clear()
         self._teams.clear()
         self._shifts.clear()
+        self._credentials = None

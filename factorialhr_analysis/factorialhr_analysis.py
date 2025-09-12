@@ -1,9 +1,10 @@
 """Main app file for the FactorialHR Analysis application."""
 
+import logging
+
 import reflex as rx
 
 from factorialhr_analysis import pages, routes
-import logging
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 
