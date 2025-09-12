@@ -13,8 +13,8 @@ from factorialhr_analysis import constants, states
 class OAuthProcessState(rx.State):
     """State to handle OAuth token processing."""
 
-    error: str = ''
-    expected_state: str = ''
+    error: rx.Field[str | None] = rx.field(default=None)
+    expected_state: rx.Field[str | None] = rx.field(default=None)
 
     @rx.event
     async def start_oauth_process(self):
@@ -34,15 +34,19 @@ class OAuthProcessState(rx.State):
     @rx.event
     async def process_oauth_response(self):
         """Process the OAuth response to exchange code for an access token."""
-        # states missmatch
-        if self.expected_state != self.router.url.query_parameters.get('state'):
-            self.error = 'State mismatch error.'
-            self.expected_state = ''
+        expected_state = self.router.url.query_parameters.get('state')
+        if not expected_state:
+            self.error = 'State is missing.'
+            self.expected_state = None
             return
-        code = self.router.url.query_parameters.get('code', '')
+        if self.expected_state != expected_state:
+            self.error = f'State mismatch error. Expected {self.expected_state} but got {expected_state}.'
+            self.expected_state = None
+            return
+        code = self.router.url.query_parameters.get('code')
         if not code:
             self.error = 'Authorization code is missing.'
-            self.expected_state = ''
+            self.expected_state = None
             return
         oauth_session = await self.get_state(states.OAuthSessionState)
         try:

@@ -13,6 +13,7 @@ services:
   app:
     build:
       context: .
+    env_file: .env
     environment:
       #REFLEX_DB_URL: postgresql+psycopg://postgres:secret@db/postgres
       REFLEX_REDIS_URL: redis://redis:6379
