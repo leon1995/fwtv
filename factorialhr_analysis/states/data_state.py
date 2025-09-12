@@ -50,10 +50,12 @@ class DataState(rx.State):
     @rx.event
     async def refresh_data(self):  # noqa: ANN201
         """Refresh the data."""
+        self.clear()
+        if constants.API_KEY:
+            return DataState.poll_data
         auth_state = await self.get_state(states.OAuthSessionState)
         if await auth_state.refresh_session():
             return DataState.poll_data
-        self.clear()
         return states.OAuthSessionState.redir
 
     @rx.event(background=True)

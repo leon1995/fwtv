@@ -246,28 +246,31 @@ class DataStateDeprecated(rx.State):
             # Get the CSV data as a string
             return output.getvalue()
 
-    @rx.event
-    def download(self, data: str):
-        """Download the given data as a CSV file."""
-        file_name = (
-            f'{self.start_date}-{self.end_date}_errors.csv' if self.start_date and self.end_date else 'errors.csv'
-        )
-        yield rx.download(
-            data=data,
-            filename=file_name,
+    async def _file_name(self) -> str:
+        settings_state = await self.get_state(SettingsState)
+        return (
+            f'{settings_state.start_date}-{settings_state.end_date}_errors.csv'
+            if settings_state.start_date and settings_state.end_date
+            else 'errors.csv'
         )
 
     @rx.event
-    def download_all_errors(self):
+    async def download_all_errors(self):
         """Download all errors as a CSV file."""
         csv_data = self._convert_to_csv(range(len(self.errors_to_show)))
-        yield self.download(csv_data)
+        yield rx.download(
+            data=csv_data,
+            filename=await self._file_name(),
+        )
 
     @rx.event
-    def download_selected_errors(self):
+    async def download_selected_errors(self):
         """Download selected errors as a CSV file."""
         csv_data = self._convert_to_csv(self.selected_error_ids)
-        yield self.download(csv_data)
+        yield rx.download(
+            data=csv_data,
+            filename=await self._file_name(),
+        )
 
 
 def render_input() -> rx.Component:
