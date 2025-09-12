@@ -11,25 +11,16 @@ services:
     image: redis
     restart: unless-stopped
   app:
-    image: local/reflex-app
+    build:
+      context: .
     environment:
       #REFLEX_DB_URL: postgresql+psycopg://postgres:secret@db/postgres
       REFLEX_REDIS_URL: redis://redis:6379
-    build:
-      context: .
+    ports:
+      - 8080:8080
     volumes:
       - upload-data:/app/uploaded_files
     restart: unless-stopped
-
-  webserver:
-    ports:
-      - 8080:80
-    build:
-      context: .
-      dockerfile: Caddy.Dockerfile
-    restart: unless-stopped
-    depends_on:
-      - app
 
 volumes:
   #postgres-data:

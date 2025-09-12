@@ -1,6 +1,6 @@
+# Ignore all hidden files and folders
 .*
-__pycache__/*
-Dockerfile
-Caddy.Dockerfile
-docker-compose.yaml
-uploaded_files
+
+# But keep these specific hidden files/folders
+!.web/bun.lockb
+!.web/package.json
