@@ -57,6 +57,8 @@ class OAuthProcessState(rx.State):
         else:
             logging.getLogger(__name__).info('created oauth session')
             yield states.DataState.refresh_data
+            # Redirect to the main page after successful authentication
+            yield states.OAuthSessionState.redir
         finally:
             self.error = ''
             self.expected_state = ''
@@ -85,7 +87,6 @@ def start_oauth_process():
     return rx.text('Redirecting to factorialhr...', on_mount=OAuthProcessState.start_oauth_process)
 
 
-@redirect_if_authenticated
 def authorize_oauth_page():
     return rx.box(
         rx.text('Validating response...'),
