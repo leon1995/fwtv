@@ -61,9 +61,9 @@ jobs:
             const maxWaitTime = 10 * 60 * 1000; // 10 minutes
             const checkInterval = 30 * 1000; // 30 seconds
             const startTime = Date.now();
-            
+
             console.log('Waiting for Docker build workflow to complete...');
-            
+
             while (Date.now() - startTime < maxWaitTime) {
               // Get the most recent workflow runs for docker-build.yml
               const { data: runs } = await github.rest.actions.listWorkflowRuns({
@@ -72,21 +72,21 @@ jobs:
                 workflow_id: 'docker-build.yml',
                 per_page: 5
               });
-              
+
               // Find the run that was triggered by our dispatch
-              const ourRun = runs.find(run => 
-                run.event === 'workflow_dispatch' && 
+              const ourRun = runs.find(run =>
+                run.event === 'workflow_dispatch' &&
                 run.status !== 'completed' &&
                 run.created_at > new Date(Date.now() - 5 * 60 * 1000).toISOString() // Within last 5 minutes
               );
-              
+
               if (!ourRun) {
                 console.log('No matching workflow run found, assuming completed');
                 break;
               }
-              
+
               console.log(`Workflow run ${ourRun.id} status: ${ourRun.status}, conclusion: ${ourRun.conclusion || 'pending'}`);
-              
+
               if (ourRun.status === 'completed') {
                 if (ourRun.conclusion === 'success') {
                   console.log('Docker build completed successfully');
@@ -95,11 +95,11 @@ jobs:
                   throw new Error(`Docker build failed with conclusion: ${ourRun.conclusion}`);
                 }
               }
-              
+
               console.log(`Waiting ${checkInterval / 1000} seconds before next check...`);
               await new Promise(resolve => setTimeout(resolve, checkInterval));
             }
-            
+
             if (Date.now() - startTime >= maxWaitTime) {
               throw new Error('Timeout waiting for Docker build to complete');
             }
