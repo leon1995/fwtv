@@ -70,29 +70,53 @@ jobs:
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 workflow_id: 'docker-build.yml',
-                per_page: 5
+                per_page: 10
               });
 
               // Find the run that was triggered by our dispatch
-              const ourRun = runs.find(run =>
+              // Look for runs within the last 5 minutes that are workflow_dispatch events
+              const recentRuns = runs.filter(run =>
                 run.event === 'workflow_dispatch' &&
-                run.status !== 'completed' &&
-                run.created_at > new Date(Date.now() - 5 * 60 * 1000).toISOString() // Within last 5 minutes
+                run.created_at > new Date(Date.now() - 5 * 60 * 1000).toISOString()
               );
 
+              console.log(`Found ${recentRuns.length} recent workflow_dispatch runs`);
+
+              // Find the most recent run that matches our criteria
+              const ourRun = recentRuns.find(run => {
+                // Check if this run has the expected inputs (is_release: true)
+                // We can't directly access inputs from the API, so we'll use heuristics
+                // Look for runs that are either in progress or recently completed
+                return run.status === 'in_progress' || 
+                       run.status === 'queued' || 
+                       (run.status === 'completed' && run.conclusion);
+              });
+
               if (!ourRun) {
-                console.log('No matching workflow run found, assuming completed');
-                break;
-              }
-
-              console.log(`Workflow run ${ourRun.id} status: ${ourRun.status}, conclusion: ${ourRun.conclusion || 'pending'}`);
-
-              if (ourRun.status === 'completed') {
-                if (ourRun.conclusion === 'success') {
-                  console.log('Docker build completed successfully');
-                  break;
+                // If no active run found, check if there's a recently completed run
+                const completedRun = recentRuns.find(run => run.status === 'completed');
+                if (completedRun) {
+                  console.log(`Found completed run ${completedRun.id} with conclusion: ${completedRun.conclusion}`);
+                  if (completedRun.conclusion === 'success') {
+                    console.log('Docker build completed successfully');
+                    break;
+                  } else {
+                    throw new Error(`Docker build failed with conclusion: ${completedRun.conclusion}`);
+                  }
                 } else {
-                  throw new Error(`Docker build failed with conclusion: ${ourRun.conclusion}`);
+                  console.log('No matching workflow run found, assuming completed');
+                  break;
+                }
+              } else {
+                console.log(`Workflow run ${ourRun.id} status: ${ourRun.status}, conclusion: ${ourRun.conclusion || 'pending'}`);
+
+                if (ourRun.status === 'completed') {
+                  if (ourRun.conclusion === 'success') {
+                    console.log('Docker build completed successfully');
+                    break;
+                  } else {
+                    throw new Error(`Docker build failed with conclusion: ${ourRun.conclusion}`);
+                  }
                 }
               }
 
