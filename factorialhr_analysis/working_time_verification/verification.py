@@ -71,13 +71,15 @@ def check_breaks_and_reset(
 
 
 def get_error(
-    attendances: Iterable[factorialhr.AttendanceShift], tolerance: datetime.timedelta
+    attendances: Iterable[factorialhr.AttendanceShift],
+    tolerance: datetime.timedelta | None = None,
 ) -> Iterator[helper.Error]:
     """Verification function.
 
     Iterates over attendances and yields any errors found. Splits logic into smaller helper functions for clarity and
     maintainability.
     """
+    tolerance = tolerance or datetime.timedelta()
     current_attendances: list[factorialhr.AttendanceShift] = []
     for attendance in attendances:
         # Validate clock-in/clock-out times

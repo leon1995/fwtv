@@ -1,0 +1,6 @@
+# Ignore all hidden files and folders
+.*
+
+# But keep these specific hidden files/folders
+!.web/bun.lockb
+!.web/package.json
