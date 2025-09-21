@@ -124,7 +124,7 @@ jobs:
 
           ### Multi-Architecture Support
           This image supports both \`linux/amd64\` and \`linux/arm64\` architectures." \
-            ${{ contains(steps.version.outputs.tag, 'alpha') || contains(steps.version.outputs.tag, 'beta') || contains(steps.version.outputs.tag, 'rc') && '--prerelease' || '' }}
+            ${{ (contains(steps.version.outputs.tag, 'alpha') || contains(steps.version.outputs.tag, 'beta') || contains(steps.version.outputs.tag, 'rc')) && '--prerelease' || '' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

@@ -43,7 +43,7 @@ class OAuthSessionState(rx.State):
     api_session_cookie: str = rx.Cookie(
         name='api_session',
         same_site='strict',
-        secure=os.environ.get('REFLEX_ENV_MODE') == rx.constants.Env.PROD,
+        secure=os.environ.get('REFLEX_ENV_MODE') == rx.constants.Env.PROD.value,
         max_age=7 * 24 * 60 * 60,
     )
     _redirect_to: str = ''
