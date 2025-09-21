@@ -5,9 +5,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0)
 
 ## [Unreleased]
 
-## [v3.0.0] -
+### Added
 
-### Changed app to run in the browser using reflex
+- **Docker Support**: Complete containerization with multi-architecture support (AMD64 + ARM64)
+- **CI/CD Pipeline**: Automated GitHub Actions workflows for testing, building, and deployment
+- **GitHub Container Registry**: Automated Docker image publishing to `ghcr.io/leon1995/fwtv`
+- **Multi-Platform Testing**: Automated testing across Python 3.11, 3.12, 3.13 on Linux, Windows, and macOS
+- **Release Automation**: Automated release creation with versioned Docker images
+- **Development Docker Images**: Pre-built development images tagged as `dev`
+- **Release Docker Images**: Versioned images with tags like `v1.0.0`, `1.0.0`, and `latest`
+
+### Changed
+
+- **Deployment**: Added Docker-first deployment option for easier production setup
+- **Documentation**: Comprehensive README update with Docker usage instructions
+- **Workflow Optimization**: Optimized release pipeline to reuse Docker build workflow (DRY principle)
+- **Build Process**: Enhanced build workflow to trigger Docker builds on main branch pushes
+- Changed app to run in the browser using reflex
 
 ## [2.4.1] - 2025-07-07
 
