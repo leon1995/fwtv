@@ -73,9 +73,9 @@ jobs:
             type=ref,event=branch
             type=ref,event=pr
             type=sha,prefix={{branch}}-
-            type=raw,value=${{ steps.tag.outputs.tag }},enable={{ steps.tag.outputs.is_release == 'true' }}
-            type=raw,value=${{ steps.tag.outputs.version_without_v }},enable={{ steps.tag.outputs.is_release == 'true' }}
-            type=raw,value=latest,enable={{ steps.tag.outputs.is_release == 'true' }}
+            type=raw,value=${{ steps.tag.outputs.tag }},enable=${{ steps.tag.outputs.is_release == 'true' }}
+            type=raw,value=${{ steps.tag.outputs.version_without_v }},enable=${{ steps.tag.outputs.is_release == 'true' }}
+            type=raw,value=latest,enable=${{ steps.tag.outputs.is_release == 'true' }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
