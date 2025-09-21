@@ -87,8 +87,8 @@ jobs:
                 // Check if this run has the expected inputs (is_release: true)
                 // We can't directly access inputs from the API, so we'll use heuristics
                 // Look for runs that are either in progress or recently completed
-                return run.status === 'in_progress' || 
-                       run.status === 'queued' || 
+                return run.status === 'in_progress' ||
+                       run.status === 'queued' ||
                        (run.status === 'completed' && run.conclusion);
               });
 
