@@ -1,3 +1,5 @@
+"""Pages for the OAuth process."""
+
 import functools
 import logging
 import secrets
@@ -83,11 +85,13 @@ def redirect_if_authenticated(page: Callable[[], rx.Component]) -> Callable[[], 
 
 
 @redirect_if_authenticated
-def start_oauth_process():
+def start_oauth_process() -> rx.Component:
+    """Page to start the OAuth process."""
     return rx.text('Redirecting to factorialhr...', on_mount=OAuthProcessState.start_oauth_process)
 
 
-def authorize_oauth_page():
+def authorize_oauth_page() -> rx.Component:
+    """Page to authorize the OAuth process."""
     return rx.box(
         rx.text('Validating response...'),
         rx.text(OAuthProcessState.error, color='red'),

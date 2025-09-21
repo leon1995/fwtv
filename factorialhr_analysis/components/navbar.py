@@ -40,7 +40,8 @@ def navbar_link(text: str, url: str) -> rx.Component:
     return rx.link(rx.text(text, size='4', weight='medium'), href=url)
 
 
-def refresh_data():
+def refresh_data() -> rx.Component:
+    """Refresh data button."""
     return rx.hstack(
         rx.button(
             rx.icon('refresh-ccw'),
@@ -60,7 +61,8 @@ def refresh_data():
     )
 
 
-def icon_menu():
+def icon_menu() -> rx.Component:
+    """Icon menu."""
     return (
         rx.menu.root(
             rx.menu.trigger(

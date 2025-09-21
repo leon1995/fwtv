@@ -1,3 +1,5 @@
+"""State for managing OAuth session and authentication."""
+
 import time
 import typing
 

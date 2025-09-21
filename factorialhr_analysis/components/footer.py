@@ -1,9 +1,12 @@
+"""Footer component."""
+
 import reflex as rx
 
 from factorialhr_analysis import states
 
 
-def refresh_data():
+def refresh_data() -> rx.Component:
+    """Refresh data button."""
     return rx.hstack(
         rx.button(
             rx.icon('refresh-ccw'),
@@ -24,6 +27,7 @@ def refresh_data():
 
 
 def footer() -> rx.Component:
+    """Footer component."""
     return rx.el.footer(
         refresh_data(),
         position='fixed',
@@ -31,5 +35,4 @@ def footer() -> rx.Component:
         bottom='0',
         width='100%',
         bg=rx.color('gray', 3),
-        # color="white",
     )

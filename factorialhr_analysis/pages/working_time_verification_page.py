@@ -3,6 +3,7 @@
 import csv
 import datetime
 import io
+import logging
 import typing
 from collections.abc import Container, Iterable, Sequence
 
@@ -15,6 +16,8 @@ from factorialhr_analysis import components, states, templates, working_time_ver
 
 
 class SettingsState(rx.State):
+    """State for managing verification settings."""
+
     _start_date: datetime.date | None = None
     _end_date: datetime.date | None = None
     _tolerance: datetime.timedelta | None = None
@@ -72,7 +75,15 @@ class SettingsState(rx.State):
 
 
 def time_to_moment(time_: datetime.time | None) -> rx.MomentDelta:
-    """Convert a datetime.time to a rx.MomentDelta."""
+    """Convert a datetime.time to a rx.MomentDelta.
+
+    Args:
+        time_: The time to convert, or None for empty delta.
+
+    Returns:
+        A MomentDelta representing the time.
+
+    """
     if time_ is None:
         return rx.MomentDelta()
     return rx.MomentDelta(hours=time_.hour, minutes=time_.minute, seconds=time_.second)
@@ -101,13 +112,23 @@ class ErrorToShow(typing.TypedDict):
 
 
 def _filter_error(filter_value: str, error: ErrorToShow) -> bool:
+    """Filter error based on name or team names.
+
+    Args:
+        filter_value: The filter string to search for.
+        error: The error to check against the filter.
+
+    Returns:
+        True if the error matches the filter, False otherwise.
+
+    """
     return filter_value in error['name'].lower() or any(
         filter_value in team_name.lower() for team_name in error['team_names']
     )
 
 
 class DataStateDeprecated(rx.State):
-    """State holding all the data."""
+    """State holding all the data for working time verification."""
 
     errors_to_show: rx.Field[list[ErrorToShow]] = rx.field(default_factory=list)
     _calculated_errors: list[ErrorToShow] = []  # noqa: RUF012
@@ -167,40 +188,54 @@ class DataStateDeprecated(rx.State):
             self.errors_to_show.clear()
             self._calculated_errors.clear()
             self.processed_employees = 0
+
+            # Get states once and store references
             data_state = await self.get_state(states.DataState)
             settings_state = await self.get_state(SettingsState)
 
-        async with self:
-            employees = [
-                employee
-                for employee in data_state._employees.values()
-                if not settings_state.only_active or employee.active
-            ]
-            self.total_amount_of_employees = len(employees)
-            shifts = [
-                shift
-                for shift in data_state._shifts.values()
-                if settings_state._start_date <= shift.date <= settings_state._end_date
-            ]
-        async with anyio.from_thread.create_task_group() as tg:
-            for employee in employees:
-                tg.start_soon(
-                    self._handle_single_employee,
-                    employee,
-                    data_state._teams.values(),
-                    shifts,
-                    settings_state._tolerance,
-                )
+        # Filter employees and shifts outside of async context for better performance
+        employees = [
+            employee
+            for employee in data_state._employees.values()  # noqa: SLF001
+            if not settings_state.only_active or employee.active
+        ]
 
-        if not self.filter_value:
-            async with self:
-                self.errors_to_show = self._calculated_errors[:]
-        else:
-            for error_to_show in self._calculated_errors:
-                if not self.filter_value or _filter_error(self.filter_value.lower(), error_to_show):
-                    async with self:
-                        self.errors_to_show.append(error_to_show)
+        shifts = [
+            shift
+            for shift in data_state._shifts.values()  # noqa: SLF001
+            if settings_state._start_date <= shift.date <= settings_state._end_date  # noqa: SLF001
+        ]
+
+        # Update total count
         async with self:
+            self.total_amount_of_employees = len(employees)
+
+        # Process employees concurrently with proper error handling
+        try:
+            async with anyio.from_thread.create_task_group() as tg:
+                for employee in employees:
+                    tg.start_soon(
+                        self._handle_single_employee,
+                        employee,
+                        data_state._teams.values(),  # noqa: SLF001
+                        shifts,
+                        settings_state._tolerance,  # noqa: SLF001
+                    )
+        except ExceptionGroup as e:
+            # Log error and reset loading state
+            logging.getLogger(__name__).exception('error calculating errors', exc_info=e)
+            async with self:
+                self.is_loading = False
+            return
+
+        # Apply filtering
+        async with self:
+            if not self.filter_value:
+                self.errors_to_show = self._calculated_errors[:]
+            else:
+                self.errors_to_show = [
+                    error for error in self._calculated_errors if _filter_error(self.filter_value.lower(), error)
+                ]
             self.is_loading = False
 
     @rx.event
@@ -273,6 +308,7 @@ class DataStateDeprecated(rx.State):
         )
 
 
+@rx.memo
 def render_input() -> rx.Component:
     """Render the date input form."""
     return rx.hstack(
@@ -340,6 +376,7 @@ def render_input() -> rx.Component:
     )
 
 
+@rx.memo
 def render_export_buttons() -> rx.Component:
     """Render the export buttons."""
     return rx.hstack(
@@ -359,6 +396,7 @@ def render_export_buttons() -> rx.Component:
     )
 
 
+@rx.memo
 def render_search() -> rx.Component:
     """Render the search input."""
     return rx.hstack(
@@ -471,6 +509,7 @@ def render_table() -> rx.Component:
     )
 
 
+@rx.memo
 def live_progress() -> rx.Component:
     """Show a live progress bar when loading data."""
     return rx.cond(

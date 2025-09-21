@@ -1,7 +1,8 @@
-import factorialhr
+"""Index page of the application."""
+
 import reflex as rx
 
-from factorialhr_analysis import constants, states, templates
+from factorialhr_analysis import states, templates
 
 
 class IndexState(rx.State):
@@ -9,23 +10,10 @@ class IndexState(rx.State):
 
     is_loading: rx.Field[bool] = rx.field(default=False)
 
-    @rx.event
-    async def get_credentials(self):
-        self.is_loading = True
-        yield
-        oauth_state = await self.get_state(states.OAuthSessionState)
-        try:
-            async with factorialhr.ApiClient(
-                base_url=constants.ENVIRONMENT_URL, auth=oauth_state.get_auth()
-            ) as api_client:
-                shifts = await factorialhr.ShiftsEndpoint(api_client).all(timeout=100)
-        finally:
-            self.is_loading = False
-
 
 @templates.template
 def index_page() -> rx.Component:
-    """The index page of the application."""
+    """Index page of the application."""
     return rx.vstack(
         rx.heading('Welcome to FactorialHR Analysis', size='4'),
         rx.hstack(
