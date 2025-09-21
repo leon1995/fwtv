@@ -37,6 +37,7 @@ jobs:
           echo "Released version: $VERSION"
 
       - name: Call Docker Build Workflow
+        id: docker-build
         uses: actions/github-script@v7
         with:
           script: |
@@ -51,51 +52,81 @@ jobs:
               }
             });
             console.log('Docker build workflow triggered for release');
+            return data;
 
       - name: Wait for Docker build to complete
         uses: actions/github-script@v7
         with:
           script: |
-            const { data: runs } = await github.rest.actions.listWorkflowRuns({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              workflow_id: 'docker-build.yml',
-              status: 'in_progress',
-              per_page: 1
-            });
-
-            if (runs.length > 0) {
-              console.log('Waiting for Docker build workflow to complete...');
-              // Wait for workflow to complete (simplified - in practice you might want more sophisticated waiting)
-              await new Promise(resolve => setTimeout(resolve, 30000)); // Wait 30 seconds
+            const maxWaitTime = 10 * 60 * 1000; // 10 minutes
+            const checkInterval = 30 * 1000; // 30 seconds
+            const startTime = Date.now();
+            
+            console.log('Waiting for Docker build workflow to complete...');
+            
+            while (Date.now() - startTime < maxWaitTime) {
+              // Get the most recent workflow runs for docker-build.yml
+              const { data: runs } = await github.rest.actions.listWorkflowRuns({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                workflow_id: 'docker-build.yml',
+                per_page: 5
+              });
+              
+              // Find the run that was triggered by our dispatch
+              const ourRun = runs.find(run => 
+                run.event === 'workflow_dispatch' && 
+                run.status !== 'completed' &&
+                run.created_at > new Date(Date.now() - 5 * 60 * 1000).toISOString() // Within last 5 minutes
+              );
+              
+              if (!ourRun) {
+                console.log('No matching workflow run found, assuming completed');
+                break;
+              }
+              
+              console.log(`Workflow run ${ourRun.id} status: ${ourRun.status}, conclusion: ${ourRun.conclusion || 'pending'}`);
+              
+              if (ourRun.status === 'completed') {
+                if (ourRun.conclusion === 'success') {
+                  console.log('Docker build completed successfully');
+                  break;
+                } else {
+                  throw new Error(`Docker build failed with conclusion: ${ourRun.conclusion}`);
+                }
+              }
+              
+              console.log(`Waiting ${checkInterval / 1000} seconds before next check...`);
+              await new Promise(resolve => setTimeout(resolve, checkInterval));
+            }
+            
+            if (Date.now() - startTime >= maxWaitTime) {
+              throw new Error('Timeout waiting for Docker build to complete');
             }
 
       - name: Create GitHub Release
         if: github.event_name == 'push'
-        uses: actions/create-release@v1
+        run: |
+          gh release create "${{ steps.version.outputs.tag }}" \
+            --title "Release ${{ steps.version.outputs.tag }}" \
+            --notes "## Docker Image
+
+          The Docker image has been built and pushed to GitHub Container Registry:
+
+          \`\`\`bash
+          docker pull ghcr.io/${{ github.repository }}:${{ steps.version.outputs.tag }}
+          \`\`\`
+
+          ### Available Tags
+          - \`${{ steps.version.outputs.tag }}\` - Specific version
+          - \`${{ steps.version.outputs.version }}\` - Version without 'v' prefix
+          - \`latest\` - Latest release (if this is the default branch)
+
+          ### Multi-Architecture Support
+          This image supports both \`linux/amd64\` and \`linux/arm64\` architectures." \
+            ${{ contains(steps.version.outputs.tag, 'alpha') || contains(steps.version.outputs.tag, 'beta') || contains(steps.version.outputs.tag, 'rc') && '--prerelease' || '' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ steps.version.outputs.tag }}
-          release_name: Release ${{ steps.version.outputs.tag }}
-          body: |
-            ## Docker Image
-
-            The Docker image has been built and pushed to GitHub Container Registry:
-
-            ```bash
-            docker pull ghcr.io/${{ github.repository }}:${{ steps.version.outputs.tag }}
-            ```
-
-            ### Available Tags
-            - `${{ steps.version.outputs.tag }}` - Specific version
-            - `${{ steps.version.outputs.version }}` - Version without 'v' prefix
-            - `latest` - Latest release (if this is the default branch)
-
-            ### Multi-Architecture Support
-            This image supports both `linux/amd64` and `linux/arm64` architectures.
-          draft: false
-          prerelease: ${{ contains(steps.version.outputs.tag, 'alpha') || contains(steps.version.outputs.tag, 'beta') || contains(steps.version.outputs.tag, 'rc') }}
 
       - name: Output release details
         run: |
