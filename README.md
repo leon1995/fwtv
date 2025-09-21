@@ -17,7 +17,7 @@ A web application built with [Reflex](https://reflex.dev) that verifies employee
 The application verifies the following German labor law requirements:
 
 - ⏰ **6-hour rule**: Work time longer than 6 hours requires a 30-minute break
-- ⏰ **9-hour rule**: Work time longer than 9 hours requires a 45-minute break  
+- ⏰ **9-hour rule**: Work time longer than 9 hours requires a 45-minute break
 - ⏰ **10-hour rule**: Work time longer than 10 hours requires an 11-hour rest period
 - 🕕 **Time window**: Work time must be within 6:00 AM and 10:00 PM
 
@@ -94,7 +94,7 @@ The project includes automated CI/CD pipelines:
 - **Actions**: Linting, testing, Docker image building
 - **Output**: Development Docker images tagged as `dev`
 
-### Release Pipeline  
+### Release Pipeline
 - **Triggers**: Git tags (e.g., `v1.0.0`)
 - **Actions**: Version extraction, Docker image building, GitHub release creation
 - **Output**: Versioned Docker images and GitHub releases

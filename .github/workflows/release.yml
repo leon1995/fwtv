@@ -63,7 +63,7 @@ jobs:
               status: 'in_progress',
               per_page: 1
             });
-            
+
             if (runs.length > 0) {
               console.log('Waiting for Docker build workflow to complete...');
               // Wait for workflow to complete (simplified - in practice you might want more sophisticated waiting)
@@ -80,18 +80,18 @@ jobs:
           release_name: Release ${{ steps.version.outputs.tag }}
           body: |
             ## Docker Image
-            
+
             The Docker image has been built and pushed to GitHub Container Registry:
-            
+
             ```bash
             docker pull ghcr.io/${{ github.repository }}:${{ steps.version.outputs.tag }}
             ```
-            
+
             ### Available Tags
             - `${{ steps.version.outputs.tag }}` - Specific version
             - `${{ steps.version.outputs.version }}` - Version without 'v' prefix
             - `latest` - Latest release (if this is the default branch)
-            
+
             ### Multi-Architecture Support
             This image supports both `linux/amd64` and `linux/arm64` architectures.
           draft: false
