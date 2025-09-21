@@ -158,7 +158,11 @@ class DataStateDeprecated(rx.State):
             async with self:
                 error_to_show = ErrorToShow(
                     name=employee.full_name,
-                    team_names=[team.name for team in teams if employee.id in team.employee_ids],
+                    team_names=[
+                        team.name
+                        for team in teams
+                        if team.employee_ids is not None and employee.id in team.employee_ids
+                    ],
                     affected_days=', '.join(str(d) for d in error.days_affected),
                     error=error.reason,
                     cumulated_break=error.break_time,
@@ -192,6 +196,9 @@ class DataStateDeprecated(rx.State):
             # Get states once and store references
             data_state = await self.get_state(states.DataState)
             settings_state = await self.get_state(SettingsState)
+
+        if settings_state._start_date is None or settings_state._end_date is None:  # noqa: SLF001
+            return
 
         # Filter employees and shifts outside of async context for better performance
         employees = [
