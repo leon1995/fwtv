@@ -58,11 +58,11 @@ class OAuthProcessState(rx.State):
             self.error = str(e)
         else:
             logging.getLogger(__name__).info('created oauth session')
+            self.error = ''
             yield states.DataState.refresh_data
             # Redirect to the main page after successful authentication
             yield states.OAuthSessionState.redir
         finally:
-            self.error = ''
             self.expected_state = ''
 
 

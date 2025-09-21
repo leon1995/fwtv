@@ -1,5 +1,6 @@
 """State for managing OAuth session and authentication."""
 
+import os
 import time
 import typing
 
@@ -42,7 +43,7 @@ class OAuthSessionState(rx.State):
     api_session_cookie: str = rx.Cookie(
         name='api_session',
         same_site='strict',
-        secure=True,
+        secure=os.environ.get('REFLEX_ENV_MODE') == rx.constants.Env.PROD,
         max_age=7 * 24 * 60 * 60,
     )
     _redirect_to: str = ''
