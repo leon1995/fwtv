@@ -21,7 +21,6 @@ def template(page: Callable[[], rx.Component]) -> Callable[[], rx.Component]:
                 padding_left='1em',
                 padding_right='1em',
             ),
-            components.footer(),
             width='100%',
         )
 
