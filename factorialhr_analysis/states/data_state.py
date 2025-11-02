@@ -116,3 +116,6 @@ class DataState(rx.State):
         self._teams.clear()
         self._shifts.clear()
         self._credentials = None
+        self._time_records.clear()
+        self._projects.clear()
+        self._project_workers.clear()
